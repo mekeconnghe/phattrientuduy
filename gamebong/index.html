@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bé Đập Bóng Bay - Tính Điểm Vui Nhộn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F7FA 100%);
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+        }
+
+        /* --- BALLOON STYLES --- */
+        .balloon {
+            position: absolute;
+            bottom: -150px;
+            width: 80px;
+            height: 100px;
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            cursor: pointer;
+            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.1), 5px 10px 10px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+            will-change: transform, bottom;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Để số hiển thị rõ */
+            color: white;
+            font-weight: 900;
+            font-size: 2rem;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+            -webkit-text-stroke: 1px rgba(0,0,0,0.1);
+        }
+
+        /* Dây bóng */
+        .balloon::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px;
+            background: rgba(255,255,255,0.8);
+            pointer-events: none;
+        }
+        /* Nút thắt */
+        .balloon::before {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 8px;
+            border-radius: 50%;
+            background: inherit;
+            pointer-events: none;
+        }
+
+        /* Bóng sáng (Reflection) */
+        .balloon-shine {
+            position: absolute;
+            top: 15%;
+            left: 20%;
+            width: 20%;
+            height: 30%;
+            border-radius: 50%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,0.1));
+            transform: rotate(45deg);
+            pointer-events: none;
+        }
+
+        .balloon:active {
+            transform: scale(0.95);
+        }
+
+        /* Floating Score Text (+5, +10) */
+        .float-score {
+            position: absolute;
+            font-size: 2rem;
+            font-weight: 900;
+            color: #fbbf24; /* Yellow-400 */
+            text-shadow: 2px 2px 0 #b45309;
+            pointer-events: none;
+            z-index: 20;
+            animation: floatUpFade 0.8s ease-out forwards;
+        }
+
+        @keyframes floatUpFade {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
+        }
+
+        /* ANIMATIONS */
+        @keyframes floatUp {
+            0% { transform: translateX(0) rotate(0deg); }
+            25% { transform: translateX(5px) rotate(2deg); }
+            50% { transform: translateX(0) rotate(0deg); }
+            75% { transform: translateX(-5px) rotate(-2deg); }
+            100% { transform: translateX(0) rotate(0deg); }
+        }
+        .anim-sway { animation: floatUp 3s infinite ease-in-out; }
+
+        @keyframes pop-effect {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        .popped { animation: pop-effect 0.2s ease-out forwards; pointer-events: none; }
+
+        @keyframes cloud-move {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(100vw); }
+        }
+
+        /* UI ELEMENTS */
+        .cloud {
+            position: absolute;
+            background: #fff;
+            border-radius: 100px;
+            opacity: 0.8;
+            z-index: 1;
+        }
+        
+        .btn-3d {
+            transition: all 0.1s;
+            transform: translateY(0);
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+        }
+        .btn-3d:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.2);
+        }
+
+        #confetti-canvas {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen relative overflow-hidden">
+
+    <!-- BACKGROUND CLOUDS -->
+    <div id="clouds-layer" class="absolute inset-0 pointer-events-none"></div>
+
+    <!-- CANVAS FOR CONFETTI -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- MENU SCREEN -->
+    <div id="screen-menu" class="absolute inset-0 z-50 flex flex-col items-center justify-center p-4 transition-all duration-500">
+        <div class="text-8xl mb-4 animate-bounce">🎈</div>
+        <h1 class="text-5xl md:text-7xl font-black text-white drop-shadow-lg mb-2 text-center stroke-cyan-700" style="-webkit-text-stroke: 2px #0ea5e9;">BÉ ĐẬP BÓNG</h1>
+        <p class="text-slate-600 font-bold text-xl mb-8 bg-white/50 px-6 py-2 rounded-full shadow-sm text-center">Mỗi lần ấn là một lượt chơi!</p>
+
+        <!-- Level Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 w-full max-w-4xl">
+            <!-- Level 10 -->
+            <button onclick="Game.start(10)" class="btn-3d bg-green-400 border-b-4 border-green-600 rounded-3xl p-4 flex flex-col items-center hover:bg-green-300">
+                <span class="text-3xl font-black text-white drop-shadow-md">10 Lượt</span>
+                <span class="text-white/80 font-bold text-xs uppercase mt-1">Dễ</span>
+                <div class="mt-2 bg-black/20 rounded-full px-3 py-1 text-xs text-white font-bold w-full">🏆 <span id="record-10">0</span></div>
+            </button>
+            <!-- Level 20 -->
+            <button onclick="Game.start(20)" class="btn-3d bg-blue-400 border-b-4 border-blue-600 rounded-3xl p-4 flex flex-col items-center hover:bg-blue-300">
+                <span class="text-3xl font-black text-white drop-shadow-md">20 Lượt</span>
+                <span class="text-white/80 font-bold text-xs uppercase mt-1">Vừa</span>
+                <div class="mt-2 bg-black/20 rounded-full px-3 py-1 text-xs text-white font-bold w-full">🏆 <span id="record-20">0</span></div>
+            </button>
+            <!-- Level 30 -->
+            <button onclick="Game.start(30)" class="btn-3d bg-yellow-400 border-b-4 border-yellow-600 rounded-3xl p-4 flex flex-col items-center hover:bg-yellow-300">
+                <span class="text-3xl font-black text-white drop-shadow-md">30 Lượt</span>
+                <span class="text-white/80 font-bold text-xs uppercase mt-1">Khá</span>
+                <div class="mt-2 bg-black/20 rounded-full px-3 py-1 text-xs text-white font-bold w-full">🏆 <span id="record-30">0</span></div>
+            </button>
+            <!-- Level 40 -->
+            <button onclick="Game.start(40)" class="btn-3d bg-orange-400 border-b-4 border-orange-600 rounded-3xl p-4 flex flex-col items-center hover:bg-orange-300">
+                <span class="text-3xl font-black text-white drop-shadow-md">40 Lượt</span>
+                <span class="text-white/80 font-bold text-xs uppercase mt-1">Khó</span>
+                <div class="mt-2 bg-black/20 rounded-full px-3 py-1 text-xs text-white font-bold w-full">🏆 <span id="record-40">0</span></div>
+            </button>
+            <!-- Level 50 -->
+            <button onclick="Game.start(50)" class="btn-3d bg-red-400 border-b-4 border-red-600 rounded-3xl p-4 flex flex-col items-center hover:bg-red-300 col-span-2 md:col-span-1">
+                <span class="text-3xl font-black text-white drop-shadow-md">50 Lượt</span>
+                <span class="text-white/80 font-bold text-xs uppercase mt-1">Siêu Khó</span>
+                <div class="mt-2 bg-black/20 rounded-full px-3 py-1 text-xs text-white font-bold w-full">🏆 <span id="record-50">0</span></div>
+            </button>
+        </div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="screen-game" class="hidden absolute inset-0 z-40">
+        <!-- Header HUD -->
+        <div class="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-50 pointer-events-none">
+            
+            <button onclick="Game.endGame()" class="pointer-events-auto bg-white/90 backdrop-blur text-red-500 font-black px-4 py-3 rounded-2xl shadow-lg hover:bg-red-50 border-b-4 border-red-200 active:border-b-0 active:translate-y-1 transition text-sm">
+                ✕ THOÁT
+            </button>
+            
+            <!-- Score Board (Center) -->
+            <div class="absolute left-1/2 transform -translate-x-1/2 top-4 bg-white/90 backdrop-blur px-8 py-2 rounded-3xl shadow-xl border-4 border-yellow-400 flex flex-col items-center animate-bounce-sm">
+                <span class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">ĐIỂM SỐ</span>
+                <span id="score-display" class="text-4xl font-black text-orange-500 leading-none drop-shadow-sm">0</span>
+            </div>
+
+            <!-- Stats (Right) -->
+            <div class="flex flex-col items-end gap-2 mt-1">
+                <div class="bg-blue-500 text-white px-4 py-1 rounded-full shadow border-2 border-white/50">
+                    <span class="text-xs font-bold uppercase">Lượt: </span>
+                    <span class="text-lg font-black"><span id="progress-current">0</span>/<span id="progress-target">10</span></span>
+                </div>
+                <div class="bg-slate-700/80 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur">
+                    ⏱ <span id="time-display">00:00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Area (Click listener for misses/all clicks) -->
+        <div id="game-area" class="absolute inset-0 overflow-hidden pointer-events-auto" onmousedown="Game.handleInteraction(event)" ontouchstart="Game.handleInteraction(event)">
+            <!-- Balloons will spawn here -->
+        </div>
+        
+        <!-- Score Popups Container -->
+        <div id="score-popups" class="absolute inset-0 pointer-events-none z-50"></div>
+    </div>
+
+    <!-- WIN SCREEN -->
+    <div id="screen-win" class="hidden absolute inset-0 z-50 bg-black/60 flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white p-8 rounded-[2rem] w-full max-w-sm text-center shadow-2xl relative overflow-hidden border-8 border-yellow-300">
+            <!-- Confetti bg inside -->
+            <div class="absolute top-0 left-0 w-full h-full bg-yellow-50 -z-10 opacity-50"></div>
+
+            <div class="text-7xl mb-2 animate-bounce">🏆</div>
+            <h2 class="text-3xl font-black text-slate-800 mb-4">HOÀN THÀNH!</h2>
+            
+            <div class="bg-orange-100 rounded-2xl p-6 mb-6 border-4 border-orange-200">
+                <p class="text-sm text-orange-500 font-bold uppercase tracking-wider">Tổng Điểm</p>
+                <p id="final-score" class="text-6xl font-black text-orange-600 my-2">0</p>
+                <p id="new-record-msg" class="hidden text-sm bg-yellow-400 text-yellow-900 font-bold py-1 px-3 rounded-full inline-block animate-pulse">🌟 KỶ LỤC MỚI! 🌟</p>
+            </div>
+            
+            <div class="text-slate-400 font-bold text-sm mb-6">Thời gian: <span id="final-time">00:00</span></div>
+
+            <button onclick="Game.replay()" class="btn-3d w-full bg-green-500 text-white font-black text-xl py-4 rounded-2xl border-b-4 border-green-700 hover:bg-green-400 mb-3">
+                CHƠI LẠI 🔄
+            </button>
+            <button onclick="Game.goHome()" class="text-slate-400 font-bold hover:text-slate-600 text-sm">Về trang chủ</button>
+        </div>
+    </div>
+
+    <script>
+        // --- AUDIO SYSTEM (Web Audio API) ---
+        const AudioSys = {
+            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+            play(type) {
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                const now = this.ctx.currentTime;
+
+                if (type === 'pop') {
+                    // Pop sound
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } else if (type === 'win') {
+                    // Victory fanfare
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); 
+                    osc.frequency.setValueAtTime(659.25, now + 0.1); 
+                    osc.frequency.setValueAtTime(783.99, now + 0.2); 
+                    osc.frequency.setValueAtTime(1046.50, now + 0.3); 
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 1.0);
+                    osc.start(now);
+                    osc.stop(now + 1.0);
+                }
+            }
+        };
+
+        // --- GAME LOGIC ---
+        const Game = {
+            target: 10, // Giờ là Max Click Limit
+            clicksUsed: 0,
+            totalScore: 0,     // Tổng điểm (cộng dồn số trên bóng)
+            activeBalloons: [],
+            startTime: 0,
+            timerInterval: null,
+            spawnInterval: null,
+            gameLoopId: null,
+            isInteractDebounce: false, // Prevent double firing touch/mouse
+            
+            // Difficulty Config
+            // Tốc độ được điều chỉnh lại để rõ ràng hơn: số to bay nhanh, số nhỏ bay chậm
+            config: {
+                10: { speedMin: 1.5, speedMax: 4.5, spawnRate: 1000, size: 90 },
+                20: { speedMin: 2.0, speedMax: 5.5, spawnRate: 900, size: 85 },
+                30: { speedMin: 2.5, speedMax: 6.5, spawnRate: 800, size: 80 },
+                40: { speedMin: 3.0, speedMax: 7.5, spawnRate: 700, size: 75 },
+                50: { speedMin: 3.5, speedMax: 9.0, spawnRate: 600, size: 70 }
+            },
+
+            el: {
+                menu: document.getElementById('screen-menu'),
+                game: document.getElementById('screen-game'),
+                win: document.getElementById('screen-win'),
+                gameArea: document.getElementById('game-area'),
+                popups: document.getElementById('score-popups'),
+                score: document.getElementById('score-display'),
+                progressCurr: document.getElementById('progress-current'),
+                progressTarget: document.getElementById('progress-target'),
+                time: document.getElementById('time-display'),
+                finalScore: document.getElementById('final-score'),
+                finalTime: document.getElementById('final-time'),
+                newRecordMsg: document.getElementById('new-record-msg')
+            },
+
+            init() {
+                this.updateRecordsUI();
+                this.createClouds();
+            },
+
+            updateRecordsUI() {
+                [10, 20, 30, 40, 50].forEach(lvl => {
+                    const rec = localStorage.getItem(`balloon_score_record_${lvl}`) || 0;
+                    const el = document.getElementById(`record-${lvl}`);
+                    if (el) el.innerText = rec;
+                });
+            },
+
+            createClouds() {
+                const layer = document.getElementById('clouds-layer');
+                for (let i = 0; i < 5; i++) {
+                    const cloud = document.createElement('div');
+                    cloud.className = 'cloud';
+                    const w = Math.random() * 100 + 100;
+                    cloud.style.width = w + 'px';
+                    cloud.style.height = (w * 0.6) + 'px';
+                    cloud.style.top = Math.random() * 50 + '%';
+                    cloud.style.animation = `cloud-move ${Math.random() * 20 + 20}s linear infinite`;
+                    cloud.style.animationDelay = `-${Math.random() * 20}s`;
+                    layer.appendChild(cloud);
+                }
+            },
+
+            start(target) {
+                this.target = target;
+                this.clicksUsed = 0;
+                this.totalScore = 0;
+                this.activeBalloons = [];
+                
+                // UI Setup
+                this.el.menu.classList.add('hidden');
+                this.el.win.classList.add('hidden');
+                this.el.game.classList.remove('hidden');
+                this.el.gameArea.innerHTML = '';
+                this.el.popups.innerHTML = '';
+                
+                this.el.score.innerText = '0';
+                this.el.progressCurr.innerText = '0';
+                this.el.progressTarget.innerText = target;
+                this.el.time.innerText = '00:00';
+
+                // Audio Init
+                AudioSys.ctx.resume();
+
+                // Start Timers
+                this.startTime = Date.now();
+                this.startTimer();
+                this.startSpawner();
+                this.gameLoop();
+            },
+
+            // --- CLICK HANDLER FOR EVERYTHING ---
+            handleInteraction(e) {
+                // Debounce simple to prevent mouse+touch double fire
+                if(this.isInteractDebounce) return;
+                this.isInteractDebounce = true;
+                setTimeout(() => this.isInteractDebounce = false, 100);
+
+                if (this.clicksUsed >= this.target) return; // Game over safety
+
+                this.clicksUsed++;
+                this.el.progressCurr.innerText = this.clicksUsed;
+
+                // Check Win Condition (Max clicks reached)
+                if (this.clicksUsed >= this.target) {
+                    setTimeout(() => this.handleWin(), 300);
+                }
+            },
+
+            startTimer() {
+                clearInterval(this.timerInterval);
+                this.timerInterval = setInterval(() => {
+                    const diff = Date.now() - this.startTime;
+                    const m = Math.floor(diff / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                    this.el.time.innerText = `${m}:${s}`;
+                }, 100);
+            },
+
+            startSpawner() {
+                clearInterval(this.spawnInterval);
+                const conf = this.config[this.target];
+                
+                // Spawn immediately
+                this.spawnBalloon();
+
+                this.spawnInterval = setInterval(() => {
+                    if (this.clicksUsed >= this.target) return; // Stop spawning if done
+                    this.spawnBalloon();
+                }, conf.spawnRate);
+            },
+
+            spawnBalloon() {
+                const conf = this.config[this.target];
+                const b = document.createElement('div');
+                
+                // Random Value (1-10)
+                const pointValue = Math.floor(Math.random() * 10) + 1;
+
+                // Random Colors
+                const hue = Math.floor(Math.random() * 360);
+                const color = `hsl(${hue}, 85%, 55%)`; // Sáng hơn chút
+                
+                b.className = 'balloon anim-sway';
+                b.style.backgroundColor = color;
+                b.style.width = conf.size + 'px';
+                b.style.height = (conf.size * 1.25) + 'px';
+                b.innerText = pointValue; // Hiển thị số
+                
+                // Random X Position
+                const maxLeft = window.innerWidth - conf.size - 20;
+                b.style.left = (Math.random() * maxLeft + 10) + 'px';
+                b.style.bottom = '-150px';
+
+                // Add Shine
+                const shine = document.createElement('div');
+                shine.className = 'balloon-shine';
+                b.appendChild(shine);
+
+                // Click Event specific to Balloon (for scoring)
+                // Note: The global gameArea handler will count the click.
+                // This handler only processes the score and pop effect.
+                const popHandler = (e) => {
+                    // Don't prevent default or stop prop so gameArea hears it
+                    // But we need to make sure we don't pop if game is over
+                    if (this.clicksUsed >= this.target) return;
+                    this.popBalloon(b, obj, pointValue);
+                };
+                b.addEventListener('mousedown', popHandler);
+                b.addEventListener('touchstart', popHandler);
+
+                this.el.gameArea.appendChild(b);
+
+                // Tính toán tốc độ dựa trên điểm số (Logic MỚI)
+                // Điểm càng cao, tốc độ càng gần speedMax
+                // Điểm 1 -> gần speedMin, Điểm 10 -> gần speedMax
+                const minS = conf.speedMin;
+                const maxS = conf.speedMax;
+                // Linear interpolation: speed = min + (max-min) * percentage
+                // (pointValue - 1) / 9 converts 1..10 to 0..1
+                let baseSpeed = minS + (maxS - minS) * ((pointValue - 1) / 9);
+                
+                // Thêm chút ngẫu nhiên (+/- 0.5) để bóng cùng điểm không bay y hệt nhau
+                let finalSpeed = baseSpeed + (Math.random() - 0.5); 
+                
+                // Đảm bảo tốc độ tối thiểu dương
+                if (finalSpeed < 0.5) finalSpeed = 0.5;
+
+                // Object tracking
+                const obj = {
+                    el: b,
+                    speed: finalSpeed,
+                    bottom: -150
+                };
+                this.activeBalloons.push(obj);
+            },
+
+            popBalloon(el, obj, value) {
+                if (el.classList.contains('popped')) return;
+                
+                AudioSys.play('pop');
+                el.classList.add('popped');
+                
+                // Update Score
+                this.totalScore += value; 
+                this.el.score.innerText = this.totalScore;
+
+                // Show Floating Score
+                this.showFloatingText(el, `+${value}`);
+
+                // Remove from active array
+                const idx = this.activeBalloons.indexOf(obj);
+                if (idx > -1) this.activeBalloons.splice(idx, 1);
+
+                // Remove DOM after animation
+                setTimeout(() => el.remove(), 200);
+            },
+
+            showFloatingText(targetEl, text) {
+                const rect = targetEl.getBoundingClientRect();
+                const floatEl = document.createElement('div');
+                floatEl.className = 'float-score';
+                floatEl.innerText = text;
+                floatEl.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+                floatEl.style.top = (rect.top) + 'px';
+                
+                this.el.popups.appendChild(floatEl);
+                
+                // Cleanup
+                setTimeout(() => floatEl.remove(), 1000);
+            },
+
+            gameLoop() {
+                cancelAnimationFrame(this.gameLoopId);
+                
+                const h = window.innerHeight;
+                for (let i = this.activeBalloons.length - 1; i >= 0; i--) {
+                    const obj = this.activeBalloons[i];
+                    obj.bottom += obj.speed;
+                    obj.el.style.bottom = obj.bottom + 'px';
+
+                    // Remove if off screen
+                    if (obj.bottom > h + 50) {
+                        obj.el.remove();
+                        this.activeBalloons.splice(i, 1);
+                    }
+                }
+
+                this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
+            },
+
+            handleWin() {
+                clearInterval(this.spawnInterval);
+                clearInterval(this.timerInterval);
+                cancelAnimationFrame(this.gameLoopId);
+                AudioSys.play('win');
+                fireConfetti();
+
+                // Save High Score Record (Score instead of Time)
+                const saved = localStorage.getItem(`balloon_score_record_${this.target}`);
+                let isNewRecord = false;
+                
+                if (!saved || this.totalScore > parseInt(saved)) {
+                    localStorage.setItem(`balloon_score_record_${this.target}`, this.totalScore);
+                    isNewRecord = true;
+                    this.updateRecordsUI();
+                }
+
+                this.el.finalScore.innerText = this.totalScore;
+                this.el.finalTime.innerText = this.el.time.innerText;
+                
+                if(isNewRecord) this.el.newRecordMsg.classList.remove('hidden');
+                else this.el.newRecordMsg.classList.add('hidden');
+
+                setTimeout(() => {
+                    this.el.win.classList.remove('hidden');
+                }, 100);
+            },
+
+            endGame() {
+                clearInterval(this.timerInterval);
+                clearInterval(this.spawnInterval);
+                cancelAnimationFrame(this.gameLoopId);
+                this.goHome();
+            },
+
+            replay() {
+                this.start(this.target);
+            },
+
+            goHome() {
+                this.el.game.classList.add('hidden');
+                this.el.win.classList.add('hidden');
+                this.el.menu.classList.remove('hidden');
+            }
+        };
+
+        // --- CONFETTI EFFECT ---
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function fireConfetti() {
+            particles = [];
+            for(let i=0; i<150; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 20,
+                    vy: (Math.random() - 0.5) * 20,
+                    color: `hsl(${Math.random()*360}, 100%, 50%)`,
+                    life: 1.0,
+                    size: Math.random() * 8 + 4
+                });
+            }
+            loopConfetti();
+        }
+
+        function loopConfetti() {
+            if (particles.length === 0) {
+                ctx.clearRect(0,0,canvas.width, canvas.height);
+                return;
+            }
+            
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            for(let i=0; i<particles.length; i++) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.5; // Gravity
+                p.life -= 0.015;
+                
+                if(p.life > 0) {
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.life;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                    ctx.fill();
+                } else {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+            ctx.globalAlpha = 1;
+            requestAnimationFrame(loopConfetti);
+        }
+
+        Game.init();
+    </script>
+</body>
+</html>
