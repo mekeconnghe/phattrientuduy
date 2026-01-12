@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pet Bingo Math</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #f0f9ff;
+            background-image: radial-gradient(#bae6fd 2px, transparent 2px);
+            background-size: 24px 24px;
+            touch-action: manipulation; /* Prevent double-tap zoom */
+        }
+        
+        .blob {
+            position: absolute;
+            filter: blur(40px);
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        .btn-push {
+            transition: all 0.1s;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+        }
+        .btn-push:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0 rgba(0,0,0,0.2);
+        }
+
+        .cell-correct {
+            animation: bounce 0.5s;
+            background-color: #4ade80 !important; /* Green-400 */
+            color: white !important;
+            border-color: #22c55e !important;
+            box-shadow: 0 4px 0 #15803d !important;
+        }
+
+        .cell-hint {
+            animation: pulse-yellow 1s infinite;
+            background-color: #fde047 !important; /* Yellow-300 */
+        }
+        
+        .pop-text-anim {
+            animation: popText 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popText {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes pulse-yellow {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(253, 224, 71, 0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .shake-anim {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        /* Penalty Animation */
+        .penalty-float {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            color: #ef4444; /* red-500 */
+            font-weight: bold;
+            font-size: 0.875rem;
+            animation: floatDown 0.8s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes floatDown {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(15px); opacity: 0; }
+        }
+
+        .pet-unlock-anim {
+            animation: popIn 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        /* Confetti */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(720deg); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col items-center justify-center text-slate-800 select-none">
+
+    <!-- Background Decoration -->
+    <div class="blob bg-purple-300 w-64 h-64 rounded-full top-0 left-0 -translate-x-1/2 -translate-y-1/2"></div>
+    <div class="blob bg-yellow-300 w-64 h-64 rounded-full bottom-0 right-0 translate-x-1/2 translate-y-1/2"></div>
+
+    <!-- UI: Home Screen -->
+    <div id="home-screen" class="w-full max-w-md p-6 text-center z-10 flex flex-col items-center gap-4">
+        <h1 class="text-5xl font-bold text-sky-600 drop-shadow-sm mb-2">Pet Bingo 🐾</h1>
+        
+        <!-- High Score Display -->
+        <div class="bg-yellow-100 px-6 py-2 rounded-full border-2 border-yellow-300 shadow-sm mb-2">
+            <span class="text-yellow-700 font-bold text-lg">🏆 Kỷ lục: <span id="high-score-display">0</span> điểm</span>
+        </div>
+
+        <div class="relative group w-full max-w-xs">
+            <div class="absolute -inset-1 bg-gradient-to-r from-pink-600 to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
+            <button onclick="showLevelSelect()" class="btn-push relative w-full py-4 bg-sky-500 hover:bg-sky-400 text-white text-2xl font-bold rounded-2xl border-b-4 border-sky-700 flex items-center justify-center gap-2">
+                <span>▶️</span> Chơi Ngay
+            </button>
+        </div>
+
+        <button onclick="showInstructions()" class="btn-push w-full max-w-xs py-3 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 text-xl font-bold rounded-2xl border-b-4 border-yellow-600 shadow-sm flex items-center justify-center gap-2">
+            <span>❓</span> Cách Chơi
+        </button>
+
+        <button onclick="showCollection()" class="btn-push w-full max-w-xs py-3 bg-white hover:bg-slate-50 text-slate-700 text-xl font-bold rounded-2xl border-2 border-slate-200 shadow-sm flex items-center justify-center gap-2">
+            <span>🎒</span> Bộ Sưu Tập
+        </button>
+    </div>
+
+    <!-- UI: Level Selection Screen -->
+    <div id="level-screen" class="hidden fixed inset-0 bg-white/95 backdrop-blur z-50 flex flex-col items-center justify-center p-6 animate-fade-in">
+        <h2 class="text-3xl font-bold text-sky-600 mb-6 border-b-4 border-sky-100 pb-2">Chọn Cấp Độ 🌟</h2>
+        <div class="space-y-3 max-w-sm w-full">
+            <button onclick="startGame('easy')" class="btn-push w-full py-4 bg-green-500 hover:bg-green-400 text-white text-xl font-bold rounded-2xl border-b-4 border-green-700 flex items-center justify-between px-6">
+                <span>🐣 Dễ</span>
+                <span class="text-sm font-normal opacity-90">20s • Phạm vi 20 (+,-)</span>
+            </button>
+            <button onclick="startGame('medium')" class="btn-push w-full py-4 bg-blue-500 hover:bg-blue-400 text-white text-xl font-bold rounded-2xl border-b-4 border-blue-700 flex items-center justify-between px-6">
+                <span>🐱 Vừa</span>
+                <span class="text-sm font-normal opacity-90">20s • Phạm vi 50 (+,-)</span>
+            </button>
+            <button onclick="startGame('hard')" class="btn-push w-full py-4 bg-orange-500 hover:bg-orange-400 text-white text-xl font-bold rounded-2xl border-b-4 border-orange-700 flex items-center justify-between px-6">
+                <span>🦁 Khó</span>
+                <span class="text-sm font-normal opacity-90">25s • Phạm vi 100 (+,-,x)</span>
+            </button>
+            <button onclick="startGame('super_hard')" class="btn-push w-full py-4 bg-purple-600 hover:bg-purple-500 text-white text-xl font-bold rounded-2xl border-b-4 border-purple-800 flex items-center justify-between px-6">
+                <span>🦄 Siêu Khó</span>
+                <span class="text-sm font-normal opacity-90">30s • Phạm vi 200 (Đủ)</span>
+            </button>
+        </div>
+        <button onclick="goHome()" class="mt-8 text-slate-400 font-bold hover:text-slate-600">
+            Quay lại
+        </button>
+    </div>
+
+    <!-- UI: Instruction Screen -->
+    <div id="instruction-screen" class="hidden fixed inset-0 bg-white/95 backdrop-blur z-50 flex flex-col items-center justify-center p-6 animate-fade-in">
+        <h2 class="text-3xl font-bold text-sky-600 mb-6 border-b-4 border-sky-100 pb-2">Cách Chơi 🎮</h2>
+        <div class="space-y-4 max-w-sm w-full mb-8">
+            <div class="flex items-center gap-4 bg-white border-2 border-slate-100 p-4 rounded-2xl shadow-sm">
+                <span class="text-4xl">👀</span>
+                <div class="text-left">
+                    <p class="font-bold text-slate-700 text-lg">Bước 1</p>
+                    <p class="text-slate-500 text-sm">Nhìn phép tính & tính kết quả.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 bg-white border-2 border-slate-100 p-4 rounded-2xl shadow-sm">
+                <span class="text-4xl">⏱️</span>
+                <div class="text-left">
+                    <p class="font-bold text-slate-700 text-lg">Bước 2</p>
+                    <p class="text-slate-500 text-sm">Nhanh tay chọn đáp án trước khi hết giờ!</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 bg-white border-2 border-slate-100 p-4 rounded-2xl shadow-sm">
+                <span class="text-4xl">⚠️</span>
+                <div class="text-left">
+                    <p class="font-bold text-slate-700 text-lg">Lưu ý</p>
+                    <p class="text-slate-500 text-sm">Chọn sai sẽ bị trừ 2 giây đấy nhé!</p>
+                </div>
+            </div>
+        </div>
+        <button onclick="goHome()" class="btn-push w-full max-w-xs py-3 bg-sky-500 hover:bg-sky-400 text-white text-xl font-bold rounded-2xl border-b-4 border-sky-700">
+            Đã Hiểu!
+        </button>
+    </div>
+
+    <!-- UI: Game Screen -->
+    <div id="game-screen" class="hidden w-full max-w-md px-4 flex-col items-center z-10 h-full justify-between py-4">
+        
+        <!-- Top Bar -->
+        <div class="w-full flex justify-between items-center mb-2">
+            <button onclick="goHome()" class="bg-slate-200 hover:bg-slate-300 p-2 rounded-xl text-slate-600 font-bold text-sm btn-push">
+                🏠 Thoát
+            </button>
+            <!-- Timer Container with relative positioning for popup -->
+            <div id="timer-container" class="relative flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-200">
+                <span class="text-xl">⏱️</span>
+                <span id="timer" class="text-xl font-bold text-red-500 transition-transform duration-100">20</span>
+            </div>
+        </div>
+
+        <!-- Question Area -->
+        <div class="bg-white w-full rounded-3xl p-4 shadow-xl border-b-8 border-slate-100 flex flex-col items-center justify-center mb-4 relative ring-4 ring-sky-100 min-h-[140px]">
+            <div class="absolute top-0 w-full h-3 bg-slate-100 rounded-t-2xl overflow-hidden">
+                <div id="progress-bar" class="h-full bg-green-400 w-full transition-all duration-1000 ease-linear"></div>
+            </div>
+            <p class="text-slate-400 font-bold text-xs mb-1 uppercase tracking-widest mt-2">Tính kết quả</p>
+            <div id="question-text" class="text-5xl md:text-6xl font-bold text-sky-600 text-center leading-tight py-2">
+                <!-- Question goes here -->
+                ...
+            </div>
+        </div>
+
+        <!-- Bingo Grid -->
+        <div id="bingo-grid" class="grid grid-cols-3 gap-3 w-full bg-white/60 p-3 rounded-3xl backdrop-blur-sm shadow-sm border border-white/50">
+            <!-- Cells generated by JS -->
+        </div>
+
+        <!-- Controls -->
+        <div class="w-full flex justify-center mt-4 mb-2">
+            <button onclick="useHint()" id="hint-btn" class="btn-push flex items-center gap-2 bg-orange-400 hover:bg-orange-300 text-white px-6 py-3 rounded-2xl font-bold text-lg border-b-4 border-orange-600">
+                💡 Gợi ý
+            </button>
+        </div>
+    </div>
+
+    <!-- UI: Win Screen -->
+    <div id="win-screen" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-b from-yellow-50 to-white -z-10"></div>
+            
+            <h2 class="text-3xl font-bold text-yellow-500 mb-1">BINGO! 🎉</h2>
+            <p class="text-slate-500 font-bold mb-4">Điểm: <span id="win-score" class="text-sky-600 text-xl">0</span></p>
+            
+            <div class="w-32 h-32 bg-sky-100 rounded-full mx-auto flex items-center justify-center mb-6 border-4 border-sky-200 shadow-inner">
+                <span id="reward-pet" class="text-7xl pet-unlock-anim">🐶</span>
+            </div>
+            
+            <h3 id="pet-name" class="text-2xl font-bold text-sky-600 mb-6">Chó Con</h3>
+
+            <button onclick="showLevelSelect()" class="btn-push w-full py-4 bg-green-500 hover:bg-green-400 text-white text-xl font-bold rounded-2xl border-b-4 border-green-700 mb-3">
+                Chơi Tiếp
+            </button>
+            <button onclick="goHome()" class="w-full py-3 text-slate-400 font-bold hover:text-slate-600">
+                Về Trang Chủ
+            </button>
+        </div>
+    </div>
+
+    <!-- UI: Collection Screen -->
+    <div id="collection-screen" class="hidden fixed inset-0 bg-white z-50 flex flex-col">
+        <div class="p-4 border-b flex items-center relative shadow-sm">
+            <button onclick="goHome()" class="absolute left-4 bg-slate-100 p-2 rounded-xl text-xl hover:bg-slate-200 transition">⬅️</button>
+            <h2 class="w-full text-center text-2xl font-bold text-slate-700">Thú Cưng Của Bé</h2>
+        </div>
+        <div id="collection-grid" class="flex-1 overflow-y-auto p-6 grid grid-cols-3 gap-4 auto-rows-min content-start bg-slate-50">
+            <!-- Pets go here -->
+        </div>
+    </div>
+
+    <script>
+        // --- DATA & STATE ---
+        const PETS_DB = [
+            { icon: '🐶', name: 'Chó Đốm' }, { icon: '🐱', name: 'Mèo Mướp' },
+            { icon: '🐭', name: 'Chuột Nhắt' }, { icon: '🐹', name: 'Hamster' },
+            { icon: '🐰', name: 'Thỏ Trắng' }, { icon: '🦊', name: 'Cáo Đỏ' },
+            { icon: '🐻', name: 'Gấu Nâu' }, { icon: '🐼', name: 'Gấu Trúc' },
+            { icon: '🐨', name: 'Koala' }, { icon: '🐯', name: 'Hổ Con' },
+            { icon: '🦁', name: 'Sư Tử' }, { icon: '🐮', name: 'Bò Sữa' },
+            { icon: '🐷', name: 'Heo Hồng' }, { icon: '🐸', name: 'Ếch Xanh' },
+            { icon: '🐵', name: 'Khỉ Con' }, { icon: '🐔', name: 'Gà Trống' },
+            { icon: '🐧', name: 'Cánh Cụt' }, { icon: '🦄', name: 'Kỳ Lân' },
+            { icon: '🐝', name: 'Ong Vàng' }, { icon: '🐞', name: 'Bọ Cánh Cam' }
+        ];
+
+        let state = {
+            gridNumbers: [],
+            markedCells: [], // true/false
+            currentProblem: { q: '', a: 0 },
+            timer: 20, // 20 seconds limit
+            maxTime: 20,
+            interval: null,
+            highScore: parseInt(localStorage.getItem('petBingoHighScore')) || 0,
+            unlockedPets: JSON.parse(localStorage.getItem('petBingoCollection')) || [],
+            level: 'medium' // easy, medium, hard, super_hard
+        };
+
+        // --- AUDIO ENGINE (Safe Mode) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playTone(freq, type, duration) {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.warn("Audio play failed", e);
+            }
+        }
+
+        function playCorrectSound() {
+            playTone(600, 'sine', 0.1);
+            setTimeout(() => playTone(800, 'sine', 0.2), 100);
+        }
+
+        function playWrongSound() {
+            playTone(200, 'sawtooth', 0.3);
+        }
+
+        function playWinSound() {
+            [400, 500, 600, 800, 1000].forEach((f, i) => {
+                setTimeout(() => playTone(f, 'square', 0.2), i * 150);
+            });
+        }
+
+        // --- GAME LOGIC ---
+
+        function initScreens() {
+            const screens = ['home-screen', 'game-screen', 'win-screen', 'collection-screen', 'instruction-screen', 'level-screen'];
+            screens.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+                document.getElementById(id).classList.remove('flex');
+            });
+            // Update High Score Display
+            document.getElementById('high-score-display').innerText = state.highScore;
+        }
+
+        function goHome() {
+            clearInterval(state.interval);
+            initScreens();
+            const home = document.getElementById('home-screen');
+            home.classList.remove('hidden');
+            home.classList.add('flex');
+        }
+
+        function showInstructions() {
+            initScreens();
+            const el = document.getElementById('instruction-screen');
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+        }
+        
+        function showLevelSelect() {
+            initScreens();
+            const el = document.getElementById('level-screen');
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+        }
+
+        function startGame(level = 'medium') {
+            state.level = level;
+            initScreens();
+            const game = document.getElementById('game-screen');
+            game.classList.remove('hidden');
+            game.classList.add('flex');
+            
+            // Define Max Number Range and Timer based on Level
+            let maxNum = 50;
+            let timeLimit = 20;
+
+            if (level === 'easy') {
+                maxNum = 20;
+                timeLimit = 20;
+            } else if (level === 'medium') {
+                maxNum = 50;
+                timeLimit = 20;
+            } else if (level === 'hard') {
+                maxNum = 100;
+                timeLimit = 25;
+            } else if (level === 'super_hard') {
+                maxNum = 200; // super_hard
+                timeLimit = 30;
+            }
+
+            // Generate Grid Numbers (unique)
+            const nums = new Set();
+            while(nums.size < 9) {
+                nums.add(Math.floor(Math.random() * maxNum) + 1);
+            }
+            state.gridNumbers = Array.from(nums);
+            state.markedCells = new Array(9).fill(false);
+            
+            // Set Timer
+            state.timer = timeLimit; 
+            state.maxTime = timeLimit;
+
+            renderGrid();
+            nextQuestion();
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(state.interval);
+            updateTimerDisplay();
+            state.interval = setInterval(() => {
+                state.timer--;
+                updateTimerDisplay();
+                if(state.timer <= 0) {
+                    clearInterval(state.interval);
+                    alert("Hết giờ rồi! Thử lại nhé!");
+                    goHome();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const el = document.getElementById('timer');
+            el.innerText = state.timer;
+            
+            // Alert color when low time
+            if (state.timer <= 5) {
+                el.classList.remove('text-slate-700');
+                el.classList.add('text-red-600', 'animate-pulse');
+            } else {
+                el.classList.add('text-slate-700');
+                el.classList.remove('text-red-600', 'animate-pulse');
+            }
+
+            // Progress bar
+            const pct = (state.timer / state.maxTime) * 100;
+            const bar = document.getElementById('progress-bar');
+            bar.style.width = pct + '%';
+            
+            // Change bar color based on time
+            if(pct < 30) bar.className = "h-full bg-red-500 w-full transition-all duration-1000 ease-linear";
+            else if(pct < 60) bar.className = "h-full bg-yellow-400 w-full transition-all duration-1000 ease-linear";
+            else bar.className = "h-full bg-green-400 w-full transition-all duration-1000 ease-linear";
+        }
+
+        function renderGrid() {
+            const gridEl = document.getElementById('bingo-grid');
+            gridEl.innerHTML = '';
+            state.gridNumbers.forEach((num, idx) => {
+                const cell = document.createElement('div');
+                cell.className = `
+                    aspect-square bg-white rounded-2xl shadow-[0_4px_0_#cbd5e1] border-2 border-slate-200 
+                    flex items-center justify-center text-3xl font-bold text-slate-700 cursor-pointer
+                    active:shadow-none active:translate-y-[4px] transition-all select-none
+                `;
+                cell.id = `cell-${idx}`;
+                cell.innerText = num;
+                cell.onclick = () => handleCellClick(idx, num, cell);
+                gridEl.appendChild(cell);
+            });
+        }
+
+        // Generate Math Problem based on AVAILABLE answers
+        function nextQuestion() {
+            try {
+                // Find indices that are NOT marked
+                const availableIndices = state.markedCells
+                    .map((marked, idx) => marked ? -1 : idx)
+                    .filter(idx => idx !== -1);
+
+                if (availableIndices.length === 0) return; // Board full
+
+                // Pick a random target from available cells
+                const targetIdx = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+                const target = state.gridNumbers[targetIdx];
+
+                let qText = "";
+                let op = 'add'; // 'add', 'sub', 'mul', 'div'
+
+                // Determine Allowed Operations based on Level
+                if (state.level === 'easy' || state.level === 'medium') {
+                    // Only Add/Sub
+                    op = Math.random() > 0.5 ? 'add' : 'sub';
+                } else if (state.level === 'hard') {
+                    // Add, Sub, Mul (No Div)
+                    const r = Math.random();
+                    if (r < 0.4) op = 'add';
+                    else if (r < 0.8) op = 'sub';
+                    else op = 'mul';
+                } else {
+                    // Super Hard: All operations
+                    const r = Math.random();
+                    if (r < 0.3) op = 'add';
+                    else if (r < 0.6) op = 'sub';
+                    else if (r < 0.8) op = 'mul';
+                    else op = 'div';
+                }
+
+                if (op === 'add') {
+                    if (target > 1) {
+                        // ADDITION: a + b = target
+                        const a = Math.floor(Math.random() * (target - 1)) + 1;
+                        const b = target - a;
+                        qText = `${a} + ${b} = ?`;
+                    } else {
+                        // Fallback if target is 1 (rare but possible)
+                        qText = `1 + 0 = ?`; // Though 0 isn't in grid usually, just safe logic
+                        if(target === 1) qText = `0 + 1 = ?`;
+                    }
+                } else if (op === 'sub') {
+                    // SUBTRACTION: a - b = target
+                    // Keep b manageable relative to level max
+                    let maxB = 10;
+                    if(state.level === 'easy') maxB = 5;
+                    else if(state.level === 'medium') maxB = 20;
+                    else maxB = 50;
+
+                    const b = Math.floor(Math.random() * maxB) + 1; 
+                    const a = target + b;
+                    qText = `${a} - ${b} = ?`;
+                } else if (op === 'mul') {
+                    // MULTIPLICATION: a * b = target
+                    // Find factors
+                    const factors = [];
+                    for(let i=2; i<=Math.sqrt(target); i++) {
+                        if(target % i === 0) factors.push(i);
+                    }
+                    
+                    if (factors.length > 0) {
+                        const a = factors[Math.floor(Math.random() * factors.length)];
+                        const b = target / a;
+                        qText = `${a} × ${b} = ?`;
+                    } else {
+                        // Prime number, fallback to add
+                        const a = Math.floor(Math.random() * (target - 1)) + 1 || 1; 
+                        const b = target - a;
+                        qText = `${a} + ${b} = ?`;
+                    }
+                } else if (op === 'div') {
+                     // DIVISION: a / b = target
+                    const b = Math.floor(Math.random() * 5) + 2; // b is 2 to 6
+                    const a = target * b;
+                    qText = `${a} : ${b} = ?`;
+                }
+
+                state.currentProblem = { q: qText, a: target };
+                const qEl = document.getElementById('question-text');
+                
+                if (qText) {
+                    qEl.innerText = qText;
+                } else {
+                    qEl.innerText = "Lỗi..."; 
+                }
+                
+                // Re-trigger animation
+                qEl.classList.remove('pop-text-anim');
+                void qEl.offsetWidth; 
+                qEl.classList.add('pop-text-anim');
+                
+                // Reset hint styling
+                document.querySelectorAll('.cell-hint').forEach(el => el.classList.remove('cell-hint'));
+            } catch (err) {
+                console.error("Error generating question:", err);
+            }
+        }
+
+        function handleCellClick(idx, num, el) {
+            if (state.markedCells[idx]) return; // Already marked
+
+            if (num === state.currentProblem.a) {
+                // CORRECT
+                state.markedCells[idx] = true;
+                el.classList.add('cell-correct');
+                el.onclick = null;
+                playCorrectSound();
+                
+                if (checkWin()) {
+                    handleWin();
+                } else {
+                    // Small delay to see the correct color
+                    setTimeout(nextQuestion, 400);
+                }
+            } else {
+                // WRONG
+                el.classList.add('shake-anim');
+                playWrongSound();
+                
+                // Penalty: -2 seconds
+                state.timer = Math.max(state.timer - 2, 0);
+                updateTimerDisplay();
+                
+                // Visual Penalty
+                showPenaltyAnim();
+
+                setTimeout(() => el.classList.remove('shake-anim'), 300);
+            }
+        }
+
+        function showPenaltyAnim() {
+            // Find timer container
+            const container = document.getElementById('timer-container');
+            const el = document.createElement('div');
+            el.innerText = '-2s';
+            el.className = 'penalty-float';
+            container.appendChild(el);
+            
+            // Shake/Flash timer
+            const timerText = document.getElementById('timer');
+            timerText.classList.add('scale-150', 'text-red-600');
+            setTimeout(() => {
+                timerText.classList.remove('scale-150');
+            }, 200);
+
+            setTimeout(() => {
+                el.remove();
+            }, 800);
+        }
+
+        function useHint() {
+            const targetIdx = state.gridNumbers.findIndex(n => n === state.currentProblem.a);
+            if (targetIdx !== -1) {
+                const el = document.getElementById(`cell-${targetIdx}`);
+                el.classList.add('cell-hint');
+                // Hint penalty: -5s
+                state.timer = Math.max(state.timer - 5, 0); 
+                updateTimerDisplay();
+            }
+        }
+
+        function checkWin() {
+            const wins = [
+                [0,1,2], [3,4,5], [6,7,8], // Rows
+                [0,3,6], [1,4,7], [2,5,8], // Cols
+                [0,4,8], [2,4,6]           // Diags
+            ];
+            return wins.some(combo => combo.every(idx => state.markedCells[idx]));
+        }
+
+        function handleWin() {
+            clearInterval(state.interval);
+            playWinSound();
+            fireConfetti();
+
+            // Calculate Score based on remaining time
+            const score = state.timer * 10;
+            document.getElementById('win-score').innerText = score;
+
+            // Update High Score
+            if (score > state.highScore) {
+                state.highScore = score;
+                localStorage.setItem('petBingoHighScore', state.highScore);
+            }
+
+            // Unlock Pet
+            const lockedPets = PETS_DB.filter(p => !state.unlockedPets.some(up => up.name === p.name));
+            let reward;
+            
+            if (lockedPets.length > 0) {
+                reward = lockedPets[Math.floor(Math.random() * lockedPets.length)];
+                state.unlockedPets.push(reward);
+                localStorage.setItem('petBingoCollection', JSON.stringify(state.unlockedPets));
+            } else {
+                reward = PETS_DB[Math.floor(Math.random() * PETS_DB.length)];
+            }
+
+            document.getElementById('reward-pet').innerText = reward.icon;
+            document.getElementById('pet-name').innerText = reward.name;
+            
+            setTimeout(() => {
+                document.getElementById('win-screen').classList.remove('hidden');
+                document.getElementById('win-screen').classList.add('flex');
+            }, 500);
+        }
+
+        // --- COLLECTION LOGIC ---
+        function showCollection() {
+            initScreens();
+            document.getElementById('collection-screen').classList.remove('hidden');
+            document.getElementById('collection-screen').classList.add('flex');
+            
+            const grid = document.getElementById('collection-grid');
+            grid.innerHTML = '';
+
+            PETS_DB.forEach(pet => {
+                const isUnlocked = state.unlockedPets.some(up => up.name === pet.name);
+                const item = document.createElement('div');
+                item.className = `flex flex-col items-center bg-white p-3 rounded-2xl shadow-sm border border-slate-100 ${!isUnlocked ? 'opacity-50 grayscale' : ''}`;
+                item.innerHTML = `
+                    <div class="text-4xl mb-2">${isUnlocked ? pet.icon : '❓'}</div>
+                    <span class="text-xs font-bold text-slate-500 text-center">${isUnlocked ? pet.name : '???'}</span>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        // --- VISUAL EFFECTS ---
+        function fireConfetti() {
+            const colors = ['#f43f5e', '#3b82f6', '#22c55e', '#eab308', '#a855f7'];
+            for(let i=0; i<50; i++) {
+                const conf = document.createElement('div');
+                conf.classList.add('confetti');
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                conf.style.top = '-10px';
+                document.body.appendChild(conf);
+                setTimeout(() => conf.remove(), 4000);
+            }
+        }
+
+        document.body.addEventListener('click', () => {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+            } catch (e) {}
+        }, { once: true });
+        
+        // Initial setup
+        document.getElementById('high-score-display').innerText = state.highScore;
+
+    </script>
+</body>
+</html>
