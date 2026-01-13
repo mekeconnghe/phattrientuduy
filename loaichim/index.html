@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bảo Tàng Tiến Hoá: Thế Giới Loài Chim</title>
+    
+    <meta property="og:title" content="Bảo Tàng Tiến Hoá: Thế Giới Loài Chim" />
+    <meta property="og:description" content="Khám phá hành trình tiến hoá kỳ diệu và những sự thật thú vị về các loài chim dành cho bé." />
+    <meta property="og:image" content="https://mekeconnghe.github.io/phattrientuduy/loaichim/thumbnail.jpg" />
+    <meta property="og:url" content="https://mekeconnghe.github.io/phattrientuduy/loaichim/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+
+        .noselect {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .progress-transition {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-amber-50 min-h-screen font-sans text-gray-800 flex flex-col items-center py-4 px-3 md:py-6 md:px-4">
+
+    <div class="text-center mb-4 w-full space-y-2">
+        <h1 class="text-xl md:text-3xl font-bold text-amber-800 flex items-center justify-center gap-2">
+            <i data-lucide="landmark" class="w-6 h-6 md:w-8 md:h-8"></i>
+            Bảo Tàng Tiến Hoá
+        </h1>
+        <div class="text-sm md:text-xl font-semibold text-amber-600 uppercase tracking-widest border-b-2 border-amber-200 inline-block pb-1">
+            Thế Giới Loài Chim
+        </div>
+        
+        <div class="pt-1">
+            <a href="https://zalo.me/g/hirmwg741" target="_blank" class="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-4 py-2 rounded-full text-xs md:text-sm font-bold shadow-md transition-all border-2 border-white ring-2 ring-pink-100">
+                <i data-lucide="users" class="w-4 h-4"></i>
+                Tham Gia Cộng đồng Mẹ Kể Con Nghe
+            </a>
+        </div>
+    </div>
+
+    <div class="w-full max-w-lg perspective-1000 group flex-grow flex flex-col justify-center mb-4">
+        <div 
+            id="flashcard"
+            class="relative w-full bg-white rounded-2xl shadow-xl overflow-hidden cursor-pointer transition-all duration-300 transform active:scale-[0.99] border-b-4 border-amber-200 noselect"
+            onclick="handleCardClick()"
+        >
+            <div class="absolute inset-0 flex flex-col h-full relative">
+                
+                <div id="card-header" class="flex-none flex flex-col w-full px-3 pt-2 mb-0 bg-white">
+                    <div class="flex justify-between items-center mb-1">
+                        <div class="flex items-center gap-1 text-gray-400 font-bold text-[10px]">
+                            <i data-lucide="map" class="w-3 h-3 text-orange-400"></i>
+                            <span id="counter-text">1/20</span>
+                        </div>
+                        <span id="side-indicator" class="px-2 py-0.5 rounded bg-amber-50 text-amber-600 font-bold text-[10px] uppercase">
+                            Hình ảnh
+                        </span>
+                    </div>
+                    <div class="w-full h-0.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-orange-400 rounded-full progress-transition" style="width: 5%"></div>
+                    </div>
+                </div>
+
+                <div id="card-content" class="flex-grow flex flex-col items-center justify-center text-center w-full">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-lg flex gap-3 mb-4">
+        <button 
+            onclick="prevCard()"
+            class="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 px-4 py-3 rounded-xl shadow-sm border border-gray-200 font-bold text-base md:text-lg transition-colors touch-manipulation"
+        >
+            <i data-lucide="chevron-left" class="w-5 h-5 md:w-6 md:h-6"></i> Trước
+        </button>
+        
+        <button 
+            id="btn-next"
+            onclick="nextCard()"
+            class="flex-1 flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white px-4 py-3 rounded-xl shadow-md shadow-amber-200 font-bold text-base md:text-lg transition-colors touch-manipulation"
+        >
+            Sau <i data-lucide="chevron-right" class="w-5 h-5 md:w-6 md:h-6"></i>
+        </button>
+    </div>
+
+    <script>
+        const dataSources = [
+            {
+                id: 1, name: "Gà", image: "ga.jpg",
+                facts: [
+                    "Có tổ tiên chung và mối liên hệ di truyền mật thiết với khủng long bạo chúa T-Rex.",
+                    "Số lượng áp đảo: Gà là loài chim phổ biến nhất thế giới với số lượng khoảng 25 tỷ con.",
+                    "Trí nhớ tốt: Gà có thể ghi nhớ và phân biệt khuôn mặt của hơn 100 cá thể (bao gồm cả người).",
+                    "Giao tiếp phức tạp: Chúng có hơn 30 kiểu tiếng kêu khác nhau để báo động, gọi bầy hoặc tán tỉnh.",
+                    "Mơ ngủ: Giống như con người và các động vật có vú, gà cũng trải qua giai đoạn ngủ mơ (REM)."
+                ]
+            },
+            {
+                id: 2, name: "Đà Điểu", image: "da-dieu.jpg",
+                facts: [
+                    "Tiến hóa từ nhóm chim chạy cổ đại Ratites, dần mất khả năng bay để thích nghi với việc chạy trên đồng cỏ.",
+                    "Vua tốc độ: Đà điểu là loài chim chạy nhanh nhất trên cạn, có thể đạt tốc độ 70 km/h.",
+                    "Mắt to hơn não: Mắt của đà điểu có đường kính 5cm, to hơn cả bộ não của chúng.",
+                    "Cú đá chết người: Đôi chân khỏe tới mức cú đá của đà điểu có thể hạ gục một con sư tử.",
+                    "Trứng khổng lồ: Một quả trứng đà điểu nặng tương đương 24 quả trứng gà và vỏ dày tới mức người đứng lên không vỡ."
+                ]
+            },
+            {
+                id: 3, name: "Chim Cánh Cụt", image: "chim-canh-cut.jpg",
+                facts: [
+                    "Tổ tiên là loài Waimanu biết bay, sau đó cánh biến đổi thành vây để bơi lặn.",
+                    "Mặc vest tự nhiên: Màu lông lưng đen và bụng trắng giúp chúng ngụy trang dưới nước tránh kẻ thù từ cả trên và dưới.",
+                    "Lọc nước biển: Chúng có tuyến lệ đặc biệt ngay trên mắt giúp lọc muối từ nước biển để uống.",
+                    "Thay lông đồng loạt: Mỗi năm một lần, chim cánh cụt sẽ rụng toàn bộ lông cũ cùng lúc (gọi là thay lông thảm khốc).",
+                    "Ông bố vĩ đại: Ở loài cánh cụt hoàng đế, con đực sẽ nhịn ăn suốt 2 tháng để ấp trứng trong bão tuyết."
+                ]
+            },
+            {
+                id: 4, name: "Chim Ưng", image: "chim-ung.jpg",
+                facts: [
+                    "Hậu duệ của các loài chim săn mồi khổng lồ thời tiền sử với đôi mắt tinh tường và bộ móng sắc bén.",
+                    "Thị lực siêu phàm: Chim ưng có thể nhìn thấy con mồi nhỏ bé từ khoảng cách hàng ki-lô-mét.",
+                    "Lao dốc siêu tốc: Khi săn mồi, chim ưng Peregrine có thể lao xuống với tốc độ hơn 320 km/h.",
+                    "Chung thủy: Nhiều loài chim ưng kết đôi và sống với nhau trọn đời.",
+                    "Mỏ xé thịt: Chiếc mỏ khoằm sắc nhọn được thiết kế hoàn hảo để xé nhỏ thức ăn nhanh chóng."
+                ]
+            },
+            {
+                id: 5, name: "Chim Bồ Câu", image: "bo-cau.jpg",
+                facts: [
+                    "Tiến hóa từ loài chim đá hoang dã ở các vách núi, dần thích nghi với môi trường đô thị.",
+                    "La bàn sinh học: Bồ câu có khả năng cảm nhận từ trường Trái Đất để tìm đường về nhà từ khoảng cách hàng nghìn km.",
+                    "Sữa diều: Cả chim bố và mẹ đều tiết ra một loại 'sữa' từ diều để nuôi con non.",
+                    "Gương soi: Bồ câu là một trong số ít loài vật vượt qua bài kiểm tra gương (nhận ra mình trong gương).",
+                    "Biểu tượng hòa bình: Trong lịch sử, chúng được dùng để đưa thư và trở thành biểu tượng của hòa bình toàn cầu."
+                ]
+            },
+            {
+                id: 6, name: "Vịt", image: "vit.jpg",
+                facts: [
+                    "Tổ tiên là các loài thủy cầm xuất hiện từ cuối kỷ Phấn trắng, sống sót qua thảm họa tuyệt chủng.",
+                    "Lông không thấm nước: Vịt có tuyến dầu ở đuôi, chúng dùng mỏ rỉa dầu lên lông để giữ mình luôn khô ráo.",
+                    "Chân mái chèo: Màng chân vịt không có dây thần kinh cảm giác, giúp chúng bơi trong nước lạnh mà không thấy buốt.",
+                    "Ngủ mở mắt: Vịt có thể ngủ với một nửa não bộ và một mắt mở để cảnh giác kẻ thù.",
+                    "Tiếng kêu: Tiếng 'quạc' của vịt mái to hơn vịt trống, và thực tế tiếng vịt kêu có tạo ra tiếng vang."
+                ]
+            },
+            {
+                id: 7, name: "Công", image: "cong.jpg",
+                facts: [
+                    "Sự tiến hóa đặc biệt về bộ lông đuôi rực rỡ để phục vụ quá trình chọn lọc bạn tình.",
+                    "Mắt trên lông: Các họa tiết hình con mắt trên đuôi công đực dùng để mê hoặc con cái và đe dọa kẻ thù.",
+                    "Chỉ con đực mới đẹp: Con mái (công cái) có màu nâu xám giản dị để dễ ngụy trang khi ấp trứng.",
+                    "Bay ngắn: Dù có bộ đuôi dài nặng nề, công vẫn có thể bay lên cành cây cao để ngủ an toàn.",
+                    "Tiếng kêu lớn: Công có tiếng kêu rất to và vang, thường dùng để cảnh báo nguy hiểm cho cả khu rừng."
+                ]
+            },
+            {
+                id: 8, name: "Chim Hồng Hạc", image: "hong-hac.jpg",
+                facts: [
+                    "Phát triển đôi chân siêu dài và chiếc mỏ đặc biệt để lọc thức ăn trong nước mặn.",
+                    "Màu hồng từ thức ăn: Lông hồng hạc vốn màu trắng xám, chuyển hồng do ăn tôm và tảo chứa sắc tố beta-carotene.",
+                    "Ăn lộn ngược: Hồng hạc là loài chim hiếm hoi chúc đầu xuống đất và lộn ngược mỏ để ăn.",
+                    "Đứng một chân: Chúng đứng một chân để giữ nhiệt cơ thể (vì chân kia co vào trong lông ấm).",
+                    "Sữa màu đỏ: Hồng hạc bố mẹ mớm cho con một loại dịch tiêu hóa màu đỏ giàu dinh dưỡng."
+                ]
+            },
+            {
+                id: 9, name: "Chim Gõ Kiến", image: "go-kien.jpg",
+                facts: [
+                    "Tiến hóa cấu trúc hộp sọ và lưỡi cực dài để chịu được lực va đập mạnh khi đục cây.",
+                    "Lưỡi quấn quanh não: Lưỡi gõ kiến dài tới mức nó vòng qua phía sau hộp sọ, hoạt động như một bộ giảm xóc.",
+                    "Tốc độ mổ: Chúng có thể mổ vào thân cây 20 lần mỗi giây mà không bị đau đầu.",
+                    "Móng vuốt leo trèo: Chân có 2 ngón trước 2 ngón sau (zygodactyl) giúp bám chặt vào thân cây thẳng đứng.",
+                    "Vai trò bác sĩ: Gõ kiến giúp cây loại bỏ sâu bệnh và tạo ra các hốc cây làm tổ cho loài khác."
+                ]
+            },
+            {
+                id: 10, name: "Cú Mèo", image: "cu-meo.jpg",
+                facts: [
+                    "Phát triển hệ thống lông vũ mềm đặc biệt giúp bay lượn hoàn toàn không gây tiếng động.",
+                    "Thính giác 3D: Tai cú nằm lệch nhau (một cao một thấp) giúp định vị chính xác vị trí con mồi trong bóng tối.",
+                    "Cổ xoay 270 độ: Cú không thể liếc mắt, nên chúng tiến hóa đốt sống cổ đặc biệt để xoay đầu gần như trọn vòng.",
+                    "Mắt hình ống: Mắt cú hình ống dài, hoạt động như ống nhòm nhìn xa trong đêm tối.",
+                    "Chân lông lá: Chân cú thường phủ lông dày để bảo vệ khỏi vết cắn của con mồi như chuột, rắn."
+                ]
+            },
+            {
+                id: 11, name: "Chim Ruồi", image: "chim-ruoi.jpg",
+                facts: [
+                    "Kích thước thu nhỏ dần để có thể bay lơ lửng một chỗ và hút mật hoa.",
+                    "Bay lùi: Đây là loài chim duy nhất trên thế giới có khả năng bay lùi và bay đứng yên một chỗ.",
+                    "Tim đập siêu nhanh: Nhịp tim chim ruồi có thể lên tới 1.200 lần/phút khi đang bay.",
+                    "Ăn liên tục: Do tiêu tốn năng lượng khủng khiếp, chúng phải ăn lượng mật hoa bằng trọng lượng cơ thể mỗi ngày.",
+                    "Vảy lấp lánh: Lông chim ruồi có cấu trúc quang học đặc biệt tạo ra màu sắc óng ánh như ngọc."
+                ]
+            },
+            {
+                id: 12, name: "Bồ Nông", image: "bo-nong.jpg",
+                facts: [
+                    "Sự phát triển của túi da dưới mỏ giúp lưu trữ lượng lớn cá khi săn mồi.",
+                    "Túi lưới khổng lồ: Túi mỏ của bồ nông có thể chứa tới 11 lít nước và cá, lớn hơn cả dạ dày của nó.",
+                    "Săn hội đồng: Bồ nông thường phối hợp thành hàng để lùa cá vào vùng nước cạn.",
+                    "Biết bay cao: Dù trông nặng nề, bồ nông có thể bay nương theo luồng khí nóng lên rất cao.",
+                    "Mỏ dài nhất: Bồ nông Úc giữ kỷ lục là loài chim có chiếc mỏ dài nhất thế giới (lên tới 50cm)."
+                ]
+            },
+            {
+                id: 13, name: "Thiên Nga", image: "thien-nga.jpg",
+                facts: [
+                    "Tổ tiên là các loài thủy cầm lớn, phát triển cổ dài để tìm kiếm thức ăn dưới đáy nước sâu.",
+                    "Tình yêu vĩnh cửu: Thiên nga nổi tiếng với tập tính một vợ một chồng suốt đời, là biểu tượng của tình yêu.",
+                    "Bảo vệ lãnh thổ: Thiên nga rất hung dữ khi bảo vệ tổ, chúng có thể tấn công cả người và chó.",
+                    "Bay theo đội hình: Chúng bay theo hình chữ V để tiết kiệm năng lượng cho những con bay sau.",
+                    "Con xấu xí: Thiên nga con khi mới nở có bộ lông xám xịt, ngắn cũn, khác hẳn vẻ đẹp lộng lẫy khi trưởng thành."
+                ]
+            },
+            {
+                id: 14, name: "Quạ", image: "qua.jpg",
+                facts: [
+                    "Một trong những loài tiến hóa vượt bậc về trí thông minh và khả năng sử dụng công cụ.",
+                    "IQ cao: Quạ thông minh tương đương một đứa trẻ 7 tuổi, biết dùng gậy để khều thức ăn.",
+                    "Thù dai: Quạ có thể ghi nhớ khuôn mặt của kẻ đã trêu chọc nó và truyền lại 'mối thù' này cho thế hệ sau.",
+                    "Tang lễ: Khi một con quạ chết, cả đàn sẽ tụ tập xung quanh để tìm hiểu nguyên nhân cái chết.",
+                    "Chơi đùa: Quạ biết chơi trượt tuyết trên mái nhà hoặc trêu chọc đuôi chó sói chỉ để giải trí."
+                ]
+            },
+            {
+                id: 15, name: "Vẹt", image: "vet.jpg",
+                facts: [
+                    "Phát triển mỏ cong khỏe mạnh và bàn chân có cấu tạo đặc biệt để leo trèo, cầm nắm trái cây.",
+                    "Bắt chước tài tình: Vẹt có cơ quan phát âm (syrinx) đặc biệt giúp nhại lại tiếng người và âm thanh môi trường.",
+                    "Chân thuận: Giống con người thuận tay phải hoặc trái, vẹt cũng thường thuận một bên chân khi cầm thức ăn.",
+                    "Tuổi thọ cao: Các loài vẹt lớn như Macaw có thể sống tới 80 năm, bằng tuổi thọ con người.",
+                    "Mỏ siêu cứng: Mỏ vẹt Macaw đủ khỏe để bóp vỡ quả hạch Brazil cứng như đá."
+                ]
+            },
+            {
+                id: 16, name: "Chim Hải Âu", image: "hai-au.jpg",
+                facts: [
+                    "Cánh trở nên rất dài và hẹp để có thể lướt đi hàng ngàn dặm trên đại dương mà không mất sức.",
+                    "Ngủ khi bay: Hải âu có thể ngủ trong vài giây ngắn ngủi ngay khi đang lướt trên không trung.",
+                    "Sải cánh kỷ lục: Hải âu Wandering có sải cánh dài nhất thế giới, lên tới 3.5 mét.",
+                    "Khứu giác dẫn đường: Chúng có khứu giác cực nhạy để tìm mùi của tôm cá giữa đại dương bao la.",
+                    "Uống nước biển: Giống chim cánh cụt, hải âu cũng có tuyến khử muối để uống nước biển trực tiếp."
+                ]
+            },
+            {
+                id: 17, name: "Sếu", image: "seu.jpg",
+                facts: [
+                    "Tiến hóa đôi chân và cổ dài để thích nghi với việc săn mồi ở các vùng đất ngập nước.",
+                    "Vũ điệu tỏ tình: Sếu nổi tiếng với các điệu nhảy phức tạp dùng để giao tiếp và tìm bạn đời.",
+                    "Biểu tượng trường thọ: Ở châu Á, sếu được coi là biểu tượng của sự may mắn và trường thọ.",
+                    "Bay cao nhất: Một số loài sếu có thể bay qua dãy Himalaya ở độ cao gần 10.000 mét.",
+                    "Tiếng kêu vang xa: Khí quản của sếu cuộn lại như kèn trumpet trong xương ức, giúp tiếng kêu vang xa vài km."
+                ]
+            },
+            {
+                id: 18, name: "Kền Kền", image: "ken-ken.jpg",
+                facts: [
+                    "Lớp lông trên đầu và cổ dần biến mất để giữ vệ sinh khi ăn xác thối tránh nhiễm khuẩn.",
+                    "Dạ dày thép: Axit trong dạ dày kền kền mạnh tới mức tiêu diệt được cả vi khuẩn bệnh than và dịch tả.",
+                    "Người dọn vệ sinh: Chúng đóng vai trò quan trọng trong hệ sinh thái bằng cách dọn sạch xác chết.",
+                    "Làm mát bằng chân: Kền kền bài tiết lên chân mình để làm mát cơ thể và sát trùng vi khuẩn.",
+                    "Khứu giác nhạy: Kền kền Thổ Nhĩ Kỳ có thể ngửi thấy mùi xác chết từ khoảng cách hơn 1 dặm."
+                ]
+            },
+            {
+                id: 19, name: "Chim Kiwi", image: "chim-kiwi.jpg",
+                facts: [
+                    "Một ví dụ của sự tiến hóa thoái hóa, cánh biến mất hoàn toàn do không có kẻ thù trên mặt đất.",
+                    "Mũi ở đầu mỏ: Kiwi là loài chim duy nhất có lỗ mũi nằm ở tận cùng đầu mỏ để đánh hơi giun dưới đất.",
+                    "Trứng to kỷ lục: Tỷ lệ trứng so với cơ thể mẹ của Kiwi là lớn nhất thế giới (chiếm 20% trọng lượng mẹ).",
+                    "Lông như tóc: Lông của Kiwi thô và rậm giống như lông thú hơn là lông chim.",
+                    "Sống về đêm: Chúng có thị lực kém nhưng xúc giác và khứu giác cực tốt để hoạt động ban đêm."
+                ]
+            },
+            {
+                id: 20, name: "Chim Moa", image: "chim-moa.jpg",
+                facts: [
+                    "Đã tuyệt chủng: Minh họa cho những loài chim khổng lồ từng thống trị các hòn đảo trước khi con người xuất hiện.",
+                    "Cao hơn người: Loài Moa lớn nhất từng cao tới 3.6 mét và nặng 230kg.",
+                    "Không có cánh: Moa là loài chim duy nhất được biết đến hoàn toàn không có xương cánh.",
+                    "Bị săn bắt: Chúng tuyệt chủng chỉ trong vòng 100 năm sau khi con người đặt chân đến New Zealand.",
+                    "Ăn thực vật: Dù khổng lồ, Moa là loài ăn lá cây và cành non, đóng vai trò như hươu nai trong rừng."
+                ]
+            }
+        ];
+
+        // --- State ---
+        let currentIndex = 0;
+        let isFlipped = false;
+        let isEndScreen = false;
+
+        // --- DOM Elements ---
+        const contentEl = document.getElementById('card-content');
+        const cardHeader = document.getElementById('card-header');
+        const counterText = document.getElementById('counter-text');
+        const progressBar = document.getElementById('progress-bar');
+        const indicatorEl = document.getElementById('side-indicator');
+        const btnNext = document.getElementById('btn-next');
+
+        // --- Functions ---
+
+        function renderCard() {
+            if (isEndScreen) {
+                renderEndScreen();
+                return;
+            }
+
+            // Reset UI states
+            cardHeader.style.display = 'flex';
+            
+            const currentCard = dataSources[currentIndex];
+            
+            // Cập nhật Thanh tiến trình & Số đếm
+            const progressPercent = ((currentIndex + 1) / dataSources.length) * 100;
+            counterText.textContent = `${currentIndex + 1}/${dataSources.length}`;
+            progressBar.style.width = `${progressPercent}%`;
+
+            
+            if (isFlipped) {
+                indicatorEl.textContent = 'Thông tin';
+                indicatorEl.className = 'px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold text-[10px] uppercase';
+            } else {
+                indicatorEl.textContent = 'Ảnh';
+                indicatorEl.className = 'px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold text-[10px] uppercase';
+            }
+
+            // Nút Next logic
+            btnNext.innerHTML = currentIndex === dataSources.length - 1 ? 'Hoàn thành <i data-lucide="check" class="w-5 h-5"></i>' : 'Sau <i data-lucide="chevron-right" class="w-5 h-5"></i>';
+
+            let html = '';
+
+            if (!isFlipped) {
+                // MẶT TRƯỚC:
+                html += `<div class="animate-fade-in w-full flex flex-col">`;
+                
+                // PHẦN ẢNH:
+                html += `
+                    <div class="relative w-full bg-white">
+                         <img 
+                            src="${currentCard.image}" 
+                            alt="${currentCard.name}" 
+                            class="w-full h-auto block"
+                            onerror="this.src='https://placehold.co/600x400/orange/white?text=${currentCard.name}';"
+                         >
+                    </div>
+                `;
+                
+                // NÚT LẬT:
+                html += `
+                    <div class="w-full flex justify-center py-3 bg-white border-t border-gray-100">
+                        <div class="inline-flex items-center gap-1.5 bg-white border border-orange-200 text-orange-600 px-4 py-1.5 rounded-full text-xs font-bold shadow-sm animate-pulse">
+                            <i data-lucide="rotate-cw" class="w-3 h-3 text-orange-500"></i>
+                            Lật mặt sau để xem 5 sự thật thú vị
+                        </div>
+                    </div>
+                `;
+                html += `</div>`;
+            } else {
+                // MẶT SAU
+                html += `<div class="animate-fade-in w-full h-full flex flex-col px-4 pb-6 py-4">`;
+                
+                html += `<h3 class="flex-none text-xl font-bold text-amber-700 mb-3 uppercase border-b border-amber-200 pb-2 w-full text-center">${currentCard.name}</h3>`;
+                
+                html += `<div class="flex-grow flex flex-col gap-2 w-full">`;
+                
+                currentCard.facts.forEach((fact, index) => {
+                    html += `
+                        <div class="flex items-start gap-3 bg-amber-50 p-3 rounded-lg border border-amber-100 shadow-sm items-center">
+                            <span class="flex-shrink-0 bg-amber-500 text-white w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shadow-sm">${index + 1}</span>
+                            <span class="text-gray-700 text-sm leading-snug font-medium text-justify">${fact}</span>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`; // End List Container
+                html += `</div>`; // End Main Container
+            }
+
+            contentEl.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function renderEndScreen() {
+            cardHeader.style.display = 'none';
+            btnNext.innerHTML = 'Hết bài';
+
+            let html = `
+                <div class="animate-fade-in flex flex-col items-center justify-center h-full text-center space-y-6 px-4 py-8">
+                    
+                    <div class="bg-gradient-to-br from-yellow-100 to-amber-200 p-6 rounded-full shadow-lg shadow-yellow-200">
+                        <i data-lucide="crown" class="w-20 h-20 text-yellow-600 fill-yellow-600"></i>
+                    </div>
+
+                    <div class="px-2">
+                        <h2 class="text-2xl md:text-3xl font-bold text-amber-700 mb-3">Bé Giỏi Quá!</h2>
+                        <p class="text-gray-600 text-base md:text-lg leading-relaxed">
+                            Chúc mừng <b>"Bé"</b> đã hoàn thành hành trình khám phá 20 loài chim kỳ thú!
+                        </p>
+                    </div>
+                    
+                    <a href="https://catalog.zalo.me/?cid=Cj7DJZwIc0rDhRz0DP6M2ZogmrT3w-GVCQNEIK2Gdc0fjSuv98Jh5G" 
+                       target="_blank"
+                       class="flex items-center gap-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg shadow-pink-200 transition-all hover:scale-105 transform border-2 border-white ring-2 ring-pink-100 mt-2">
+                        <i data-lucide="gift" class="w-6 h-6"></i>
+                        Xem tốt sản phẩm cho Mẹ & Bé 
+                    </a>
+                    
+                    <button 
+                        onclick="resetApp()"
+                        class="flex items-center gap-2 text-amber-600 hover:text-amber-800 font-semibold text-sm mt-4 bg-amber-50 px-5 py-2 rounded-full transition-colors border border-amber-100">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        Khám phá lại từ đầu
+                    </button>
+                </div>
+            `;
+            contentEl.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function handleCardClick() {
+            if (isEndScreen) return;
+            flipCard();
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            renderCard();
+        }
+
+        function nextCard() {
+            event.stopPropagation();
+            if (isEndScreen) return;
+
+            if (currentIndex < dataSources.length - 1) {
+                currentIndex++;
+                isFlipped = false;
+                renderCard();
+            } else {
+                isEndScreen = true;
+                isFlipped = false;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            event.stopPropagation();
+            if (isEndScreen) {
+                isEndScreen = false;
+                currentIndex = dataSources.length - 1;
+                renderCard();
+                return;
+            }
+
+            if (currentIndex > 0) {
+                isFlipped = false;
+                currentIndex--;
+                renderCard();
+            }
+        }
+
+        function resetApp() {
+            event.stopPropagation();
+            currentIndex = 0;
+            isFlipped = false;
+            isEndScreen = false;
+            renderCard();
+        }
+
+        // --- Init ---
+        lucide.createIcons();
+        renderCard();
+
+    </script>
+</body>
+</html>
