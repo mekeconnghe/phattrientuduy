@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Câu hỏi gợi mở: Cuộc đua trong rừng</title>
+    <!-- Tailwind CSS (Styling) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* Custom Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+
+        /* 3D Perspective for the card */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+
+        /* Hide scrollbar for cleaner look but allow scrolling */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Disable text selection for app-like feel on double tap */
+        .noselect {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+    </style>
+</head>
+<body class="bg-orange-50 min-h-screen font-sans text-gray-800 flex flex-col items-center py-6 px-4">
+
+    <!-- Header -->
+    <div class="text-center mb-6 w-full space-y-3">
+        <h1 class="text-2xl md:text-3xl font-bold text-orange-700 flex items-center justify-center gap-2">
+            <i data-lucide="book-open" class="w-8 h-8"></i>
+            Truyện: Cuộc đua trong rừng
+        </h1>
+        
+        <!-- Link Zalo Cộng Đồng (Updated Style: Pink) -->
+        <a href="https://zalo.me/g/hirmwg741" target="_blank" class="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-md hover:shadow-lg transition-all hover:scale-105 active:scale-95 border-2 border-white ring-2 ring-pink-100">
+            <i data-lucide="users" class="w-5 h-5"></i>
+            Tham gia Cộng đồng Mẹ Kể Con Nghe
+        </a>
+    </div>
+
+    <!-- Main Flashcard Container -->
+    <div class="w-full max-w-lg perspective-1000 group flex-grow flex flex-col justify-center mb-6">
+        <div 
+            id="flashcard"
+            class="relative w-full bg-white rounded-2xl shadow-xl overflow-hidden cursor-pointer transition-all duration-300 transform active:scale-[0.98] border-b-4 border-orange-200 noselect"
+            style="min-height: 400px; height: auto;"
+            onclick="handleCardClick()"
+        >
+            <!-- Card Content Area -->
+            <div class="absolute inset-0 p-6 md:p-8 flex flex-col justify-between h-full overflow-y-auto no-scrollbar">
+                
+                <!-- Top Indicator -->
+                <div id="card-header" class="flex justify-between items-center text-xs md:text-sm text-gray-400 font-medium uppercase tracking-wider mb-4">
+                    <span id="question-counter">Câu hỏi 1/5</span>
+                    <span id="side-indicator" class="px-2 py-1 rounded bg-orange-100 text-orange-700 transition-colors duration-300">
+                        Câu hỏi
+                    </span>
+                </div>
+
+                <!-- Content Container (Dynamic) -->
+                <div id="card-content" class="flex-grow flex flex-col items-center justify-center text-center space-y-4">
+                    <!-- Content injected by JS -->
+                </div>
+
+                <!-- Bottom Instruction -->
+                <div id="card-footer" class="mt-6 text-center text-gray-400 text-xs italic">
+                    (Chạm vào thẻ để lật xem đáp án)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="w-full max-w-lg flex flex-col gap-3 mb-4">
+        
+        <!-- Navigation Buttons -->
+        <div class="flex justify-between w-full gap-3">
+            <button 
+                onclick="prevCard()"
+                class="flex-1 flex items-center justify-center gap-2 bg-white active:bg-gray-100 text-gray-700 px-4 py-3 rounded-xl shadow-sm border border-gray-200 font-semibold transition-colors touch-manipulation"
+            >
+                <i data-lucide="chevron-left" class="w-5 h-5"></i> Trước
+            </button>
+            
+            <button 
+                id="btn-next"
+                onclick="nextCard()"
+                class="flex-1 flex items-center justify-center gap-2 bg-orange-600 active:bg-orange-700 text-white px-4 py-3 rounded-xl shadow-md shadow-orange-200 font-semibold transition-colors touch-manipulation"
+            >
+                Sau <i data-lucide="chevron-right" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Auxiliary Controls -->
+        <div class="flex justify-center gap-3 w-full">
+            <button 
+                id="btn-hint"
+                onclick="toggleHint()"
+                class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium bg-white text-gray-600 border border-gray-100 hover:bg-yellow-50 active:bg-yellow-100 transition-colors touch-manipulation"
+            >
+                <i data-lucide="lightbulb" class="w-4 h-4"></i> <span id="hint-text">Xem gợi ý</span>
+            </button>
+
+            <button 
+                onclick="resetApp()"
+                class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium bg-white text-gray-600 border border-gray-100 hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
+            >
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Làm lại
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Data ---
+        // Cập nhật dữ liệu truyện Cuộc đua trong rừng
+        const flashcards = [
+            {
+                id: 1,
+                question: "Trong truyện có những con vật nào tham gia cuộc đua?",
+                answer: "Đáp án:",
+                explanation: "Sóc Nâu, Hươu Đốm và Rùa Xanh.",
+                hint: "Một bạn chạy nhanh, một bạn cao, một bạn chậm."
+            },
+            {
+                id: 2,
+                question: "Vì sao cuộc đua đầu tiên bị dừng lại?",
+                answer: "Đáp án:",
+                explanation: "Vì Sóc Nâu xuất phát quá sớm.",
+                hint: "Có bạn chạy trước khi đến lượt."
+            },
+            {
+                id: 3,
+                question: "Ai là người giúp cuộc đua bắt đầu lại đúng cách?",
+                answer: "Đáp án:",
+                explanation: "Chim Sáo.",
+                hint: "Một bạn chim biết hót."
+            },
+            {
+                id: 4,
+                question: "Khi chơi đúng luật, các bạn cảm thấy thế nào?",
+                answer: "Đáp án:",
+                explanation: "Vui và thoải mái.",
+                hint: "Ai cũng mỉm cười."
+            },
+            {
+                id: 5,
+                question: "Chơi công bằng giúp các con vật giữ tình bạn như thế nào?",
+                answer: "Đáp án:",
+                explanation: "Giúp ai cũng được tham gia và vui cùng nhau.",
+                hint: "Nghĩ về việc chờ đợi và tôn trọng nhau."
+            }
+        ];
+
+        // --- State ---
+        let currentIndex = 0;
+        let isFlipped = false;
+        let showHint = false;
+        let isEndScreen = false;
+
+        // --- DOM Elements ---
+        const contentEl = document.getElementById('card-content');
+        const counterEl = document.getElementById('question-counter');
+        const indicatorEl = document.getElementById('side-indicator');
+        const cardHeader = document.getElementById('card-header');
+        const cardFooter = document.getElementById('card-footer');
+        const btnHint = document.getElementById('btn-hint');
+        const hintTextEl = document.getElementById('hint-text');
+        const btnNext = document.getElementById('btn-next');
+
+        // --- Functions ---
+
+        function renderCard() {
+            if (isEndScreen) {
+                renderEndScreen();
+                return;
+            }
+
+            cardHeader.style.display = 'flex';
+            cardFooter.style.display = 'block';
+            
+            const currentCard = flashcards[currentIndex];
+            
+            counterEl.textContent = `Câu hỏi ${currentIndex + 1}/${flashcards.length}`;
+            
+            if (isFlipped) {
+                indicatorEl.textContent = 'Đáp án';
+                indicatorEl.className = 'px-2 py-1 rounded bg-green-100 text-green-700 transition-colors duration-300';
+            } else {
+                indicatorEl.textContent = 'Câu hỏi';
+                indicatorEl.className = 'px-2 py-1 rounded bg-orange-100 text-orange-700 transition-colors duration-300';
+            }
+
+            btnHint.disabled = false;
+            btnHint.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-100');
+            
+            if (isFlipped) {
+                btnHint.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-100');
+                btnHint.classList.remove('bg-yellow-100', 'text-yellow-700', 'hover:bg-yellow-50');
+                btnHint.disabled = true;
+            } else {
+                if (showHint) {
+                    btnHint.classList.add('bg-yellow-100', 'text-yellow-700');
+                    hintTextEl.textContent = 'Ẩn gợi ý';
+                } else {
+                    btnHint.classList.remove('bg-yellow-100', 'text-yellow-700');
+                    btnHint.classList.add('bg-white');
+                    hintTextEl.textContent = 'Xem gợi ý';
+                }
+            }
+            
+            btnNext.innerHTML = currentIndex === flashcards.length - 1 ? 'Hoàn thành <i data-lucide="check" class="w-5 h-5"></i>' : 'Sau <i data-lucide="chevron-right" class="w-5 h-5"></i>';
+
+            let html = '';
+
+            if (!isFlipped) {
+                html += `<div class="animate-fade-in w-full">`;
+                // Check if it's the profound question (last one) to style differently if needed, but keeping consistent for now
+                html += `<h3 class="text-xl md:text-2xl font-bold text-gray-800 leading-relaxed mb-4">${currentCard.question}</h3>`;
+                
+                if (showHint) {
+                    html += `
+                        <div class="mt-4 p-4 bg-yellow-50 text-yellow-800 text-sm md:text-base rounded-lg border border-yellow-200 animate-slide-up text-left shadow-sm">
+                            <span class="font-bold flex items-center gap-2 mb-1 text-yellow-900">
+                                <i data-lucide="lightbulb" class="w-4 h-4"></i> Gợi ý:
+                            </span>
+                            ${currentCard.hint}
+                        </div>
+                    `;
+                }
+                html += `</div>`;
+            } else {
+                html += `<div class="animate-fade-in w-full">`;
+                html += `<div class="text-green-600 font-bold text-xl mb-4 uppercase tracking-wide">${currentCard.answer}</div>`;
+                html += `
+                    <div class="text-gray-800 bg-green-50 p-6 rounded-xl whitespace-pre-line text-center border-2 border-green-200 text-xl font-medium shadow-inner">
+                        ${currentCard.explanation}
+                    </div>
+                `;
+                html += `</div>`;
+            }
+
+            contentEl.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function renderEndScreen() {
+            cardHeader.style.display = 'none';
+            cardFooter.style.display = 'none';
+            btnHint.disabled = true;
+            btnHint.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-100');
+            btnNext.innerHTML = 'Kết thúc';
+
+            let html = `
+                <div class="animate-fade-in flex flex-col items-center justify-center h-full text-center">
+                    <div class="mb-6 bg-orange-100 p-6 rounded-full">
+                        <i data-lucide="heart" class="w-16 h-16 text-orange-600"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Tuyệt vời!</h2>
+                    <p class="text-gray-600 mb-8">Bé đã hoàn thành câu chuyện về các loài vật.</p>
+                    
+                    <a href="https://catalog.zalo.me/?cid=Cj7DJZwIc0rDhRz0DP6M2ZogmrT3w-GVCQNEIK2Gdc0fjSuv98Jh5G" 
+                       target="_blank"
+                       class="flex items-center gap-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg shadow-pink-200 transition-all hover:scale-105 transform border-2 border-white ring-2 ring-pink-100">
+                        <i data-lucide="gift" class="w-6 h-6"></i>
+                        Xem sản phẩm tốt cho Mẹ & bé
+                    </a>
+                    
+                    <p class="text-xs text-gray-400 mt-6">Nhấn "Làm lại" để chơi lại từ đầu</p>
+                </div>
+            `;
+            contentEl.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function handleCardClick() {
+            if (isEndScreen) return;
+            flipCard();
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            renderCard();
+        }
+
+        function nextCard() {
+            event.stopPropagation();
+            if (isEndScreen) return;
+
+            if (currentIndex < flashcards.length - 1) {
+                currentIndex++;
+                isFlipped = false;
+                showHint = false;
+                renderCard();
+            } else {
+                isEndScreen = true;
+                isFlipped = false;
+                showHint = false;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            event.stopPropagation();
+            if (isEndScreen) {
+                isEndScreen = false;
+                currentIndex = flashcards.length - 1;
+                renderCard();
+                return;
+            }
+
+            if (currentIndex > 0) {
+                isFlipped = false;
+                showHint = false;
+                currentIndex--;
+                renderCard();
+            }
+        }
+
+        function toggleHint() {
+            event.stopPropagation(); 
+            if (isEndScreen || isFlipped) return;
+            showHint = !showHint;
+            renderCard();
+        }
+
+        function resetApp() {
+            event.stopPropagation();
+            currentIndex = 0;
+            isFlipped = false;
+            showHint = false;
+            isEndScreen = false;
+            renderCard();
+        }
+
+        // --- Init ---
+        lucide.createIcons();
+        renderCard();
+
+    </script>
+</body>
+</html>
