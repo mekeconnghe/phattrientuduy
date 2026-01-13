@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bảo Tàng Tiến Hoá: Động Vật Có Vú</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+
+        .noselect {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; 
+            border-radius: 0.75rem;
+        }
+    </style>
+</head>
+<body class="bg-amber-50 min-h-screen font-sans text-gray-800 flex flex-col items-center py-4 px-3 md:py-6 md:px-4">
+
+    <div class="text-center mb-4 w-full space-y-2">
+        <h1 class="text-xl md:text-3xl font-bold text-amber-800 flex items-center justify-center gap-2">
+            <i data-lucide="landmark" class="w-6 h-6 md:w-8 md:h-8"></i>
+            Bảo Tàng Tiến Hoá
+        </h1>
+        <div class="text-sm md:text-xl font-semibold text-amber-600 uppercase tracking-widest border-b-2 border-amber-200 inline-block pb-1">
+            Động Vật Có Vú
+        </div>
+        
+        <div class="pt-1">
+            <a href="https://zalo.me/g/hirmwg741" target="_blank" class="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-4 py-2 rounded-full text-xs md:text-sm font-bold shadow-md transition-all border-2 border-white ring-2 ring-pink-100">
+                <i data-lucide="users" class="w-4 h-4"></i>
+                Tham Gia Cộng đồng Mẹ Kể Con Nghe
+            </a>
+        </div>
+    </div>
+
+    <div class="w-full max-w-lg perspective-1000 group flex-grow flex flex-col justify-center mb-4">
+        <div 
+            id="flashcard"
+            class="relative w-full bg-white rounded-2xl shadow-xl overflow-hidden cursor-pointer transition-all duration-300 transform active:scale-[0.99] border-b-4 border-amber-200 noselect"
+            style="height: 550px;" 
+            onclick="handleCardClick()"
+        >
+            <div class="absolute inset-0 p-4 md:p-6 flex flex-col h-full">
+                
+                <div id="card-header" class="flex-none flex justify-between items-center text-xs md:text-sm text-gray-400 font-medium uppercase tracking-wider mb-2">
+                    <span id="question-counter">Thẻ 1/30</span>
+                    <span id="side-indicator" class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 transition-colors duration-300 font-bold">
+                        Hình ảnh
+                    </span>
+                </div>
+
+                <div id="card-content" class="flex-grow flex flex-col items-center justify-center text-center w-full overflow-hidden">
+                    </div>
+                
+                </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-lg flex gap-3 mb-4">
+        <button 
+            onclick="prevCard()"
+            class="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 px-4 py-3 rounded-xl shadow-sm border border-gray-200 font-bold text-base md:text-lg transition-colors touch-manipulation"
+        >
+            <i data-lucide="chevron-left" class="w-5 h-5 md:w-6 md:h-6"></i> Trước
+        </button>
+        
+        <button 
+            id="btn-next"
+            onclick="nextCard()"
+            class="flex-1 flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white px-4 py-3 rounded-xl shadow-md shadow-amber-200 font-bold text-base md:text-lg transition-colors touch-manipulation"
+        >
+            Sau <i data-lucide="chevron-right" class="w-5 h-5 md:w-6 md:h-6"></i>
+        </button>
+    </div>
+
+    <script>
+        const dataSources = [
+            {
+                id: 1, name: "Ngựa", image: "ngua.jpg",
+                facts: [
+                    "Tổ tiên Eohippus chỉ nhỏ bằng con chó, sống trong rừng rậm ẩm ướt.",
+                    "Đã tiến hóa từ 4 ngón chân thành 1 móng guốc duy nhất để chạy nhanh.",
+                    "Ngựa có thể ngủ đứng nhờ cơ chế khóa khớp chân đặc biệt.",
+                    "Mắt ngựa nằm hai bên đầu giúp nhìn gần như 360 độ.",
+                    "Ngựa chỉ có thể thở bằng mũi, không thể thở bằng miệng."
+                ]
+            },
+            {
+                id: 2, name: "Cá Voi", image: "ca-voi.jpg",
+                facts: [
+                    "Tổ tiên là Pakicetus, loài thú 4 chân đi bộ trên cạn 50 triệu năm trước.",
+                    "Cá voi xanh là động vật lớn nhất lịch sử Trái Đất, nặng tới 190 tấn.",
+                    "Chúng ngủ một nửa não để vừa nghỉ ngơi vừa ngoi lên thở.",
+                    "Tiếng hát cá voi truyền xa hàng ngàn km dưới đại dương.",
+                    "Lỗ mũi đã di chuyển lên đỉnh đầu để thở dễ dàng hơn."
+                ]
+            },
+            {
+                id: 3, name: "Voi", image: "voi.jpg",
+                facts: [
+                    "Tổ tiên cổ đại Moeritherium trông giống hà mã nhỏ, chưa có vòi dài.",
+                    "Vòi voi chứa 40.000 bó cơ, khéo léo đến mức nhặt được đồng xu.",
+                    "Voi có trí nhớ siêu phàm, nhớ đường đi và nguồn nước sau nhiều năm.",
+                    "Chúng giao tiếp bằng sóng hạ âm truyền qua mặt đất.",
+                    "Đôi tai to chứa nhiều mạch máu giúp voi tỏa nhiệt làm mát."
+                ]
+            },
+            {
+                id: 4, name: "Tê Giác", image: "te-giac.jpg",
+                facts: [
+                    "Tổ tiên Hyracodon từng là loài chạy nhanh, không sừng, giống ngựa.",
+                    "Tê giác khổng lồ Paraceratherium từng cao tới 5 mét.",
+                    "Sừng cấu tạo từ chất sừng (keratin) giống tóc và móng tay người.",
+                    "Da rất dày nhưng nhạy cảm, dễ bị cháy nắng nên phải tắm bùn.",
+                    "Mắt kém nhưng thính giác và khứu giác cực kỳ nhạy bén."
+                ]
+            },
+            {
+                id: 5, name: "Hươu Cao Cổ", image: "huou-cao-co.jpg",
+                facts: [
+                    "Tổ tiên Samotherium cổ ngắn là mắt xích chứng minh sự tiến hóa.",
+                    "Tim hươu nặng 11kg để bơm máu lên não qua chiếc cổ dài.",
+                    "Lưỡi màu xanh đen dài 50cm để chống cháy nắng khi ăn lá.",
+                    "Hươu con sinh ra rơi từ 1.5m xuống đất nhưng biết đi sau 1 giờ.",
+                    "Cổ dài nhưng chỉ có 7 đốt sống, bằng số lượng của con người."
+                ]
+            },
+            {
+                id: 6, name: "Lạc Đà", image: "lac-da.jpg",
+                facts: [
+                    "Tổ tiên Poebrotherium chỉ nhỏ bằng con cừu, sống ở Bắc Mỹ.",
+                    "Bướu chứa mỡ dự trữ năng lượng, không phải chứa nước.",
+                    "Lạc đà có thể uống 100 lít nước chỉ trong 10 phút.",
+                    "Có 3 mí mắt và 2 hàng lông mi để chắn cát sa mạc.",
+                    "Có thể thay đổi thân nhiệt để hạn chế mất nước qua mồ hôi."
+                ]
+            },
+            {
+                id: 7, name: "Người", image: "nguoi.jpg",
+                facts: [
+                    "Tiến hóa từ vượn phương nam (Australopithecus) đi bằng hai chân.",
+                    "Não người chỉ chiếm 2% trọng lượng nhưng dùng 20% năng lượng.",
+                    "Là loài động vật có khả năng chạy bền đường dài tốt nhất.",
+                    "Ngón cái linh hoạt giúp chế tạo và sử dụng công cụ tinh xảo.",
+                    "Loài duy nhất có thanh quản hạ thấp để nói ngôn ngữ phức tạp."
+                ]
+            },
+            {
+                id: 8, name: "Chó", image: "cho.jpg",
+                facts: [
+                    "Được con người thuần hóa từ sói xám khoảng 15.000 năm trước.",
+                    "Sự đa dạng các giống chó ngày nay là do con người lai tạo.",
+                    "Mũi chó nhạy gấp hàng chục ngàn lần mũi người.",
+                    "Chó có thể hiểu khoảng 165 từ ngữ, như trẻ em 2 tuổi.",
+                    "Vân mũi của mỗi chú chó là độc nhất, giống vân tay người."
+                ]
+            },
+            {
+                id: 9, name: "Mèo", image: "meo.jpg",
+                facts: [
+                    "Chung dòng dõi xa xưa với Hổ răng kiếm (Machairodontinae).",
+                    "Mèo không nếm được vị ngọt do đột biến gen.",
+                    "Có phản xạ xoay người trên không để luôn tiếp đất bằng chân.",
+                    "Dành 70% cuộc đời để ngủ nhằm tiết kiệm năng lượng săn mồi.",
+                    "Mèo chỉ kêu 'meo' để giao tiếp với người, ít khi kêu với đồng loại."
+                ]
+            },
+            {
+                id: 10, name: "Gấu", image: "gau.jpg",
+                facts: [
+                    "Tổ tiên Ursavus xuất hiện 20 triệu năm trước, nhỏ bằng chó săn.",
+                    "Gấu ngủ đông 6 tháng không ăn uống mà cơ bắp không teo.",
+                    "Khứu giác nhạy hơn cả chó, ngửi thấy thức ăn cách 30km.",
+                    "Trông ục ịch nhưng chạy nhanh tới 50km/h, hơn cả người.",
+                    "Rất thông minh, biết dùng đá để gài bẫy hoặc gãi ngứa."
+                ]
+            },
+            {
+                id: 11, name: "Hải Cẩu", image: "hai-cau.jpg",
+                facts: [
+                    "Tổ tiên Puijila từng có 4 chân và đuôi dài giống rái cá.",
+                    "Máu giàu oxy giúp chúng nín thở dưới nước tới 2 giờ.",
+                    "Có thể ngủ khi đang lặn hoặc nổi trên mặt nước.",
+                    "Bộ râu cực nhạy cảm nhận rung động của cá cách 100m.",
+                    "Lớp mỡ dày giúp giữ ấm trong nước băng giá."
+                ]
+            },
+            {
+                id: 12, name: "Lợn", image: "lon.jpg",
+                facts: [
+                    "Tổ tiên là 'Lợn địa ngục' Entelodont khổng lồ cao 2m.",
+                    "Rất sạch sẽ, tắm bùn chỉ vì không có tuyến mồ hôi để làm mát.",
+                    "Thông minh top 4 thế giới động vật, hơn cả loài chó.",
+                    "Có trí nhớ tốt, nhớ cách mở cửa chuồng sau nhiều tháng.",
+                    "Mõm là đĩa sụn cứng dùng để ủi đất tìm thức ăn."
+                ]
+            },
+            {
+                id: 13, name: "Tatu", image: "tatu.jpg",
+                facts: [
+                    "Tổ tiên Glyptodon to bằng chiếc ô tô và có mai cứng như thép.",
+                    "Loài thú duy nhất có vỏ xương cứng bao phủ lưng.",
+                    "Khi gặp nguy, chúng cuộn tròn thành quả bóng cứng ngắc.",
+                    "Tatu ngủ tới 16 tiếng mỗi ngày trong hang sâu.",
+                    "Tatu chín đai luôn sinh 4 con cùng lúc giống hệt nhau."
+                ]
+            },
+            {
+                id: 14, name: "Lười", image: "luoi.jpg",
+                facts: [
+                    "Tổ tiên Lười đất khổng lồ to bằng voi, sống trên mặt đất.",
+                    "Di chuyển siêu chậm nên rêu mọc xanh cả trên lông.",
+                    "Mất tới 30 ngày để tiêu hóa hết một bữa ăn.",
+                    "Lười ba ngón quay đầu được 270 độ để quan sát xung quanh.",
+                    "Chậm trên cạn nhưng bơi rất giỏi và nín thở được 40 phút."
+                ]
+            },
+            {
+                id: 15, name: "Tê Tê", image: "te-te.jpg",
+                facts: [
+                    "Tổ tiên 45 triệu năm trước không có vảy nhưng chi trước rất khỏe.",
+                    "Thú duy nhất có vảy sừng bao phủ toàn thân.",
+                    "Không có răng, nghiền nát kiến bằng sỏi trong dạ dày.",
+                    "Lưỡi dài hơn cả cơ thể và dính như keo để bắt kiến.",
+                    "Cuộn tròn khi gặp nguy, lớp vảy cứng sư tử cũng chịu thua."
+                ]
+            },
+            {
+                id: 16, name: "Chuột Túi", image: "chuot-tui.jpg",
+                facts: [
+                    "Tổ tiên xuất phát từ Nam Mỹ, di cư sang Úc qua ngả Nam Cực.",
+                    "Thú lớn duy nhất di chuyển bằng cách nhảy.",
+                    "Cấu tạo cơ thể khiến chúng không thể đi lùi.",
+                    "Con non sinh ra bé bằng hạt đậu, sống trong túi mẹ 9 tháng.",
+                    "Mẹ có thể tạm dừng thai nghén nếu môi trường khắc nghiệt."
+                ]
+            },
+            {
+                id: 17, name: "Thú Mỏ Vịt", image: "thu-mo-vit.jpg",
+                facts: [
+                    "Là 'hóa thạch sống', loài thú hiếm hoi đẻ trứng.",
+                    "Mỏ giống vịt có khả năng cảm nhận dòng điện từ con mồi.",
+                    "Không có dạ dày, thức ăn đi thẳng từ thực quản xuống ruột.",
+                    "Con đực có cựa ở chân sau chứa nọc độc gây đau đớn.",
+                    "Khi bơi chúng nhắm mắt, dùng mỏ để dò đường."
+                ]
+            },
+            {
+                id: 18, name: "Dơi", image: "doi.jpg",
+                facts: [
+                    "Tổ tiên Onychonycteris có móng vuốt ở cả 5 ngón tay.",
+                    "Là loài thú duy nhất biết bay thực sự (không phải lượn).",
+                    "Dùng sóng siêu âm để 'nhìn' thấy con mồi trong đêm tối.",
+                    "Ngủ treo ngược để tiết kiệm năng lượng và dễ bay đi.",
+                    "Dù nhỏ bé nhưng dơi có thể sống rất lâu, tới 30-40 năm."
+                ]
+            },
+            {
+                id: 19, name: "Bò", image: "bo.jpg",
+                facts: [
+                    "Thuần hóa từ loài Bò rừng Aurochs khổng lồ và hung dữ.",
+                    "Dạ dày 4 ngăn giúp lên men và tiêu hóa cỏ.",
+                    "Bò có thể nhớ mặt bạn bè và biết giận hờn nếu bị cô lập.",
+                    "Chúng thường nằm để ngủ sâu, đứng chỉ để nghỉ ngơi.",
+                    "Mắt lồi giúp nhìn bao quát 300 độ để phát hiện kẻ thù."
+                ]
+            },
+            {
+                id: 20, name: "Hươu", image: "huou.jpg",
+                facts: [
+                    "Hươu cổ đại không có gạc, dùng răng nanh dài để chiến đấu.",
+                    "Gạc hươu là xương phát triển nhanh nhất, rụng và mọc lại mỗi năm.",
+                    "Tai xoay độc lập 180 độ để định vị âm thanh.",
+                    "Thường chạy zíc-zắc và nhảy cao để làm kẻ thù mất phương hướng.",
+                    "Mắt có lớp phản quang giúp nhìn cực tốt trong đêm."
+                ]
+            },
+            {
+                id: 21, name: "Hà Mã", image: "ha-ma.jpg",
+                facts: [
+                    "Họ hàng gần với cá voi và cá heo hơn là lợn.",
+                    "Tiết ra 'mồ hôi máu' màu đỏ để chống nắng và kháng khuẩn.",
+                    "Không bơi mà chạy dưới đáy sông, trên cạn chạy tới 30km/h.",
+                    "Răng nanh dài tới 50cm, là vũ khí bảo vệ lãnh thổ.",
+                    "Hà mã mẹ sinh con và cho con bú ngay trong nước."
+                ]
+            },
+            {
+                id: 22, name: "Sư Tử", image: "su-tu.jpg",
+                facts: [
+                    "Tổ tiên Sư tử hang động lớn hơn 25% và không có bờm.",
+                    "Tiếng gầm uy lực vang xa 8km để khẳng định lãnh thổ.",
+                    "Là loài họ mèo duy nhất sống thành bầy đàn xã hội.",
+                    "Bờm càng sẫm màu chứng tỏ sư tử đực càng khỏe mạnh.",
+                    "Ngủ tới 20 tiếng mỗi ngày để dành sức đi săn đêm."
+                ]
+            },
+            {
+                id: 23, name: "Hổ", image: "ho.jpg",
+                facts: [
+                    "Các vằn đen không chỉ ở lông mà in hằn cả trên da.",
+                    "Rất thích nước, bơi giỏi và thường tắm cho mát.",
+                    "Nước bọt có tính sát trùng tự nhiên giúp lành vết thương.",
+                    "Là kẻ săn mồi đơn độc, dựa vào ngụy trang thay vì chạy đua.",
+                    "Mỗi con hổ có hoa văn vằn vện riêng biệt như vân tay."
+                ]
+            },
+            {
+                id: 24, name: "Gấu Túi (Koala)", image: "gau-tui.jpg",
+                facts: [
+                    "Tổ tiên từng to lớn hơn nhiều và sống trong rừng mưa cổ đại.",
+                    "Chỉ ăn lá khuynh diệp có độc, dạ dày phải giải độc.",
+                    "Koala hầu như không uống nước, lấy nước từ lá cây.",
+                    "Ngủ tới 22 tiếng mỗi ngày do thức ăn ít năng lượng.",
+                    "Vân tay giống người đến mức máy móc khó phân biệt."
+                ]
+            },
+            {
+                id: 25, name: "Thú Ăn Kiến", image: "thu-an-kien.jpg",
+                facts: [
+                    "Đã tiến hóa để mất hoàn toàn răng.",
+                    "Lưỡi dài 60cm thò ra thụt vào 150 lần/phút để bắt kiến.",
+                    "Móng vuốt trước sắc như dao để phá tổ mối và tự vệ.",
+                    "Dạ dày co bóp mạnh để nghiền nát kiến thay cho răng.",
+                    "Có thân nhiệt thấp nhất loài thú (32.7°C) để tiết kiệm năng lượng."
+                ]
+            },
+            {
+                id: 26, name: "Linh Cẩu", image: "linh-cau.jpg",
+                facts: [
+                    "Tiến hóa từ loài giống cầy mangut, không phải họ chó.",
+                    "Hàm răng cực khỏe, nhai nát được xương ống động vật lớn.",
+                    "Sống theo chế độ mẫu hệ, con cái to hơn và lãnh đạo đàn.",
+                    "Tiếng 'cười' thực chất là âm thanh khi bị kích động.",
+                    "Là thợ săn tài ba với tỉ lệ thành công cao hơn sư tử."
+                ]
+            },
+            {
+                id: 27, name: "Hải Ly", image: "hai-ly.jpg",
+                facts: [
+                    "Tổ tiên Castoroides to bằng con gấu đen, nặng 100kg.",
+                    "Biết xây đập ngăn nước tạo ao hồ để bảo vệ tổ.",
+                    "Răng cửa màu cam chứa sắt siêu cứng, mọc dài suốt đời.",
+                    "Có mí mắt thứ ba trong suốt như kính bơi.",
+                    "Đuôi dẹt to bản dùng làm bánh lái và đập nước cảnh báo."
+                ]
+            },
+            {
+                id: 28, name: "Thỏ", image: "tho.jpg",
+                facts: [
+                    "Đôi tai dài xoay độc lập để nghe và tỏa nhiệt làm mát.",
+                    "Chạy trốn theo đường zíc-zắc để kẻ thù khó bắt.",
+                    "Răng mọc liên tục suốt đời nên phải gặm nhấm để mài mòn.",
+                    "Mắt nằm hai bên giúp nhìn thấy phía sau lưng.",
+                    "Thỏ ăn lại phân mềm của mình để hấp thụ hết dinh dưỡng."
+                ]
+            },
+            {
+                id: 29, name: "Khỉ Đột", image: "khi-dot.jpg",
+                facts: [
+                    "Chia sẻ tới 98% mã gen với con người.",
+                    "Thân hình đồ sộ nhưng chủ yếu ăn lá cây và hoa quả.",
+                    "Cũng có dấu vân tay và vân chân riêng biệt như người.",
+                    "Con đực đầu đàn gọi là 'Lưng bạc' do mảng lông trắng trên lưng.",
+                    "Biết cười, buồn bã và có đời sống tình cảm phong phú."
+                ]
+            },
+            {
+                id: 30, name: "Sóc", image: "soc.jpg",
+                facts: [
+                    "Vô tình trồng rừng do chôn hạt dẻ rồi quên vị trí.",
+                    "Đuôi xù giúp giữ thăng bằng và làm chăn khi ngủ đông.",
+                    "Răng cửa mọc dài 15cm mỗi năm, cực sắc để cắn hạt.",
+                    "Chạy lắt léo để trốn thoát khỏi chim ưng và mèo.",
+                    "Có thể xoay cổ chân sau 180 độ để leo xuống cây cắm đầu."
+                ]
+            }
+        ];
+
+        // --- State ---
+        let currentIndex = 0;
+        let isFlipped = false;
+        let isEndScreen = false;
+
+        // --- DOM Elements ---
+        const contentEl = document.getElementById('card-content');
+        const counterEl = document.getElementById('question-counter');
+        const indicatorEl = document.getElementById('side-indicator');
+        const cardHeader = document.getElementById('card-header');
+        const btnNext = document.getElementById('btn-next');
+
+        // --- Functions ---
+
+        function renderCard() {
+            if (isEndScreen) {
+                renderEndScreen();
+                return;
+            }
+
+            // Reset UI states
+            cardHeader.style.display = 'flex';
+            
+            const currentCard = dataSources[currentIndex];
+            
+            counterEl.textContent = `Thẻ ${currentIndex + 1}/${dataSources.length}`;
+            
+            if (isFlipped) {
+                indicatorEl.textContent = 'Thông tin';
+                indicatorEl.className = 'px-3 py-1 rounded-full bg-blue-100 text-blue-800 transition-colors duration-300 font-bold';
+            } else {
+                indicatorEl.textContent = 'Hình ảnh';
+                indicatorEl.className = 'px-3 py-1 rounded-full bg-amber-100 text-amber-800 transition-colors duration-300 font-bold';
+            }
+
+            // Nút Next logic
+            btnNext.innerHTML = currentIndex === dataSources.length - 1 ? 'Hoàn thành <i data-lucide="check" class="w-6 h-6"></i>' : 'Sau <i data-lucide="chevron-right" class="w-6 h-6"></i>';
+
+            let html = '';
+
+            if (!isFlipped) {
+                // MẶT TRƯỚC: ẢNH + NÚT LẬT (ĐÃ XÓA TÊN VÀ FOOTER TEXT)
+                html += `<div class="animate-fade-in w-full h-full flex flex-col items-center justify-between pb-1">`;
+                
+                // Phần ảnh (Tăng chiều cao tối đa)
+                html += `
+                    <div class="relative w-full flex-grow flex items-center justify-center bg-gray-50 rounded-xl overflow-hidden border border-gray-100 mb-4 shadow-inner">
+                         <img 
+                            src="${currentCard.image}" 
+                            alt="${currentCard.name}" 
+                            class="card-image"
+                            onerror="this.src='https://placehold.co/600x400/orange/white?text=${currentCard.name}';"
+                         >
+                    </div>
+                `;
+                
+                // Nút lật mới: Nhỏ gọn, bám sát chữ, màu sáng
+                html += `
+                    <div class="flex-none w-full flex justify-center pb-2">
+                        <div class="inline-flex items-center gap-2 bg-white border border-orange-300 text-orange-600 px-4 py-1.5 rounded-full text-sm font-bold shadow-sm animate-pulse cursor-pointer hover:scale-105 transition-transform hover:bg-orange-50">
+                            <i data-lucide="rotate-cw" class="w-4 h-4 text-orange-500"></i>
+                            Lật mặt sau để xem 5 sự thật thú vị
+                        </div>
+                    </div>
+                `;
+                html += `</div>`;
+            } else {
+                // MẶT SAU: DANH SÁCH SỰ THẬT (TỐI ƯU KHÔNG GIAN VÌ ĐÃ BỎ FOOTER)
+                html += `<div class="animate-fade-in w-full h-full flex flex-col pt-1">`;
+                
+                // Tiêu đề
+                html += `<h3 class="flex-none text-xl md:text-2xl font-bold text-amber-700 mb-2 uppercase border-b border-amber-200 pb-2 w-full text-center">${currentCard.name}</h3>`;
+                
+                // Danh sách
+                html += `<div class="flex-grow flex flex-col justify-between w-full space-y-2 pb-1">`;
+                
+                currentCard.facts.forEach((fact, index) => {
+                    html += `
+                        <div class="flex items-start gap-2 md:gap-3 bg-amber-50 p-2 md:p-3 rounded-lg border border-amber-100 shadow-sm flex-1 items-center">
+                            <span class="flex-shrink-0 bg-amber-500 text-white w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center font-bold text-xs md:text-sm shadow-sm">${index + 1}</span>
+                            <span class="text-gray-700 text-[13px] md:text-base leading-snug font-medium text-justify">${fact}</span>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`; // End List Container
+                html += `</div>`; // End Main Container
+            }
+
+            contentEl.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function renderEndScreen() {
+            cardHeader.style.display = 'none';
+            btnNext.innerHTML = 'Kết thúc';
+
+            let html = `
+                <div class="animate-fade-in flex flex-col items-center justify-center h-full text-center space-y-6">
+                    <div class="bg-amber-100 p-6 rounded-full">
+                        <i data-lucide="trophy" class="w-16 h-16 text-amber-600"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Hoàn thành!</h2>
+                        <p class="text-gray-600">Bé đã khám phá hết 30 loài động vật.</p>
+                    </div>
+                    
+                    <a href="https://catalog.zalo.me/?cid=Cj7DJZwIc0rDhRz0DP6M2ZogmrT3w-GVCQNEIK2Gdc0fjSuv98Jh5G" 
+                       target="_blank"
+                       class="flex items-center gap-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg shadow-pink-200 transition-all hover:scale-105 transform border-2 border-white ring-2 ring-pink-100">
+                        <i data-lucide="gift" class="w-6 h-6"></i>
+                        Xem sản phẩm tốt cho Mẹ & bé
+                    </a>
+                    
+                    <button 
+                        onclick="resetApp()"
+                        class="text-gray-500 hover:text-amber-600 underline text-sm mt-4">
+                        Quay lại từ đầu
+                    </button>
+                </div>
+            `;
+            contentEl.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function handleCardClick() {
+            if (isEndScreen) return;
+            flipCard();
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            renderCard();
+        }
+
+        function nextCard() {
+            event.stopPropagation();
+            if (isEndScreen) return;
+
+            if (currentIndex < dataSources.length - 1) {
+                currentIndex++;
+                isFlipped = false;
+                renderCard();
+            } else {
+                isEndScreen = true;
+                isFlipped = false;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            event.stopPropagation();
+            if (isEndScreen) {
+                isEndScreen = false;
+                currentIndex = dataSources.length - 1;
+                renderCard();
+                return;
+            }
+
+            if (currentIndex > 0) {
+                isFlipped = false;
+                currentIndex--;
+                renderCard();
+            }
+        }
+
+        function resetApp() {
+            event.stopPropagation();
+            currentIndex = 0;
+            isFlipped = false;
+            isEndScreen = false;
+            renderCard();
+        }
+
+        // --- Init ---
+        lucide.createIcons();
+        renderCard();
+
+    </script>
+</body>
+</html>
