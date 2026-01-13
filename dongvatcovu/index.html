@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bảo Tàng Tiến Hoá: Động Vật Có Vú</title>
+    
+    <meta property="og:title" content="Bảo Tàng Tiến Hoá: Động Vật Có Vú" />
+    <meta property="og:description" content="Khám phá hành trình tiến hoá kỳ diệu và những sự thật thú vị về 30 loài động vật dành cho bé." />
+    <meta property="og:image" content="https://mekeconnghe.github.io/phattrientuduy/dongvatcovu/thumbnail.jpg" />
+    <meta property="og:url" content="https://mekeconnghe.github.io/phattrientuduy/dongvatcovu/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
@@ -31,6 +40,11 @@
             height: 100%;
             object-fit: contain; 
             border-radius: 0.75rem;
+        }
+        
+        /* Hiệu ứng chuyển động mượt cho thanh tiến trình */
+        .progress-transition {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
     </style>
 </head>
@@ -62,17 +76,24 @@
         >
             <div class="absolute inset-0 p-4 md:p-6 flex flex-col h-full">
                 
-                <div id="card-header" class="flex-none flex justify-between items-center text-xs md:text-sm text-gray-400 font-medium uppercase tracking-wider mb-2">
-                    <span id="question-counter">Thẻ 1/30</span>
-                    <span id="side-indicator" class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 transition-colors duration-300 font-bold">
-                        Hình ảnh
-                    </span>
+                <div id="card-header" class="flex-none flex flex-col w-full mb-3">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <div class="flex items-center gap-1.5 text-gray-500 font-bold text-xs md:text-sm">
+                            <i data-lucide="map" class="w-4 h-4 text-orange-500"></i>
+                            <span id="counter-text">1 / 30</span>
+                        </div>
+                        <span id="side-indicator" class="px-3 py-0.5 rounded-full bg-amber-100 text-amber-800 transition-colors duration-300 font-bold text-[10px] md:text-xs uppercase tracking-wide">
+                            Hình ảnh
+                        </span>
+                    </div>
+                    <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-orange-500 rounded-full progress-transition" style="width: 3.33%"></div>
+                    </div>
                 </div>
 
                 <div id="card-content" class="flex-grow flex flex-col items-center justify-center text-center w-full overflow-hidden">
                     </div>
-                
-                </div>
+            </div>
         </div>
     </div>
 
@@ -404,9 +425,10 @@
 
         // --- DOM Elements ---
         const contentEl = document.getElementById('card-content');
-        const counterEl = document.getElementById('question-counter');
-        const indicatorEl = document.getElementById('side-indicator');
         const cardHeader = document.getElementById('card-header');
+        const counterText = document.getElementById('counter-text');
+        const progressBar = document.getElementById('progress-bar');
+        const indicatorEl = document.getElementById('side-indicator');
         const btnNext = document.getElementById('btn-next');
 
         // --- Functions ---
@@ -422,14 +444,18 @@
             
             const currentCard = dataSources[currentIndex];
             
-            counterEl.textContent = `Thẻ ${currentIndex + 1}/${dataSources.length}`;
+            // Cập nhật Thanh tiến trình & Số đếm
+            const progressPercent = ((currentIndex + 1) / dataSources.length) * 100;
+            counterText.textContent = `${currentIndex + 1} / ${dataSources.length}`;
+            progressBar.style.width = `${progressPercent}%`;
+
             
             if (isFlipped) {
                 indicatorEl.textContent = 'Thông tin';
-                indicatorEl.className = 'px-3 py-1 rounded-full bg-blue-100 text-blue-800 transition-colors duration-300 font-bold';
+                indicatorEl.className = 'px-3 py-0.5 rounded-full bg-blue-100 text-blue-800 transition-colors duration-300 font-bold text-[10px] md:text-xs uppercase tracking-wide';
             } else {
                 indicatorEl.textContent = 'Hình ảnh';
-                indicatorEl.className = 'px-3 py-1 rounded-full bg-amber-100 text-amber-800 transition-colors duration-300 font-bold';
+                indicatorEl.className = 'px-3 py-0.5 rounded-full bg-amber-100 text-amber-800 transition-colors duration-300 font-bold text-[10px] md:text-xs uppercase tracking-wide';
             }
 
             // Nút Next logic
@@ -438,10 +464,10 @@
             let html = '';
 
             if (!isFlipped) {
-                // MẶT TRƯỚC: ẢNH + NÚT LẬT (ĐÃ XÓA TÊN VÀ FOOTER TEXT)
+                // MẶT TRƯỚC
                 html += `<div class="animate-fade-in w-full h-full flex flex-col items-center justify-between pb-1">`;
                 
-                // Phần ảnh (Tăng chiều cao tối đa)
+                // Phần ảnh
                 html += `
                     <div class="relative w-full flex-grow flex items-center justify-center bg-gray-50 rounded-xl overflow-hidden border border-gray-100 mb-4 shadow-inner">
                          <img 
@@ -453,10 +479,10 @@
                     </div>
                 `;
                 
-                // Nút lật mới: Nhỏ gọn, bám sát chữ, màu sáng
+                // Nút lật mới: Nhỏ gọn, sáng sủa
                 html += `
                     <div class="flex-none w-full flex justify-center pb-2">
-                        <div class="inline-flex items-center gap-2 bg-white border border-orange-300 text-orange-600 px-4 py-1.5 rounded-full text-sm font-bold shadow-sm animate-pulse cursor-pointer hover:scale-105 transition-transform hover:bg-orange-50">
+                        <div class="inline-flex items-center gap-2 bg-white border border-orange-300 text-orange-600 px-5 py-2 rounded-full text-sm font-bold shadow-sm animate-pulse cursor-pointer hover:scale-105 transition-transform hover:bg-orange-50">
                             <i data-lucide="rotate-cw" class="w-4 h-4 text-orange-500"></i>
                             Lật mặt sau để xem 5 sự thật thú vị
                         </div>
@@ -464,14 +490,14 @@
                 `;
                 html += `</div>`;
             } else {
-                // MẶT SAU: DANH SÁCH SỰ THẬT (TỐI ƯU KHÔNG GIAN VÌ ĐÃ BỎ FOOTER)
+                // MẶT SAU: Tối ưu không gian, không scroll
                 html += `<div class="animate-fade-in w-full h-full flex flex-col pt-1">`;
                 
                 // Tiêu đề
                 html += `<h3 class="flex-none text-xl md:text-2xl font-bold text-amber-700 mb-2 uppercase border-b border-amber-200 pb-2 w-full text-center">${currentCard.name}</h3>`;
                 
                 // Danh sách
-                html += `<div class="flex-grow flex flex-col justify-between w-full space-y-2 pb-1">`;
+                html += `<div class="flex-grow flex flex-col justify-between w-full space-y-1 md:space-y-2 pb-1">`;
                 
                 currentCard.facts.forEach((fact, index) => {
                     html += `
@@ -492,29 +518,34 @@
 
         function renderEndScreen() {
             cardHeader.style.display = 'none';
-            btnNext.innerHTML = 'Kết thúc';
+            btnNext.innerHTML = 'Hết bài';
 
             let html = `
                 <div class="animate-fade-in flex flex-col items-center justify-center h-full text-center space-y-6">
-                    <div class="bg-amber-100 p-6 rounded-full">
-                        <i data-lucide="trophy" class="w-16 h-16 text-amber-600"></i>
+                    
+                    <div class="bg-gradient-to-br from-yellow-100 to-amber-200 p-6 rounded-full shadow-lg shadow-yellow-200">
+                        <i data-lucide="crown" class="w-20 h-20 text-yellow-600 fill-yellow-600"></i>
                     </div>
-                    <div>
-                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Hoàn thành!</h2>
-                        <p class="text-gray-600">Bé đã khám phá hết 30 loài động vật.</p>
+
+                    <div class="px-2">
+                        <h2 class="text-2xl md:text-3xl font-bold text-amber-700 mb-3">Bé Giỏi Quá!</h2>
+                        <p class="text-gray-600 text-base md:text-lg leading-relaxed">
+                            Chúc mừng <b>"Bé"</b> đã hoàn thành hành trình khám phá 30 loài động vật kỳ thú!
+                        </p>
                     </div>
                     
                     <a href="https://catalog.zalo.me/?cid=Cj7DJZwIc0rDhRz0DP6M2ZogmrT3w-GVCQNEIK2Gdc0fjSuv98Jh5G" 
                        target="_blank"
-                       class="flex items-center gap-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg shadow-pink-200 transition-all hover:scale-105 transform border-2 border-white ring-2 ring-pink-100">
+                       class="flex items-center gap-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg shadow-pink-200 transition-all hover:scale-105 transform border-2 border-white ring-2 ring-pink-100 mt-2">
                         <i data-lucide="gift" class="w-6 h-6"></i>
-                        Xem sản phẩm tốt cho Mẹ & bé
+                        Xem tốt sản phẩm cho Mẹ & Bé
                     </a>
                     
                     <button 
                         onclick="resetApp()"
-                        class="text-gray-500 hover:text-amber-600 underline text-sm mt-4">
-                        Quay lại từ đầu
+                        class="flex items-center gap-2 text-amber-600 hover:text-amber-800 font-semibold text-sm mt-4 bg-amber-50 px-5 py-2 rounded-full transition-colors border border-amber-100">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        Khám phá lại từ đầu
                     </button>
                 </div>
             `;
